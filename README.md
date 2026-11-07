@@ -179,9 +179,11 @@ gradle test --tests 'dev.nexobedrock.SmokeRealPackTest'
 
 Smoke-test output is written under `build/`, not into the source pack.
 
-### License
+### Project independence and license
 
 This repository does not currently include a `LICENSE` file. Please clarify the project's license before redistributing it or accepting contributions that may have licensing requirements.
+
+NexoBedrock is an independent, non-commercial project developed without a profit motive. No original source code or code from the Nexo plugin or Nexo's Scaffolding extension was copied or used in this project; NexoBedrock was implemented independently using publicly available APIs and documentation. It is not affiliated with, endorsed by, or an official product of Nexo or the Scaffolding extension's maintainers. Nexo and Scaffolding names and trademarks belong to their respective owners.
 
 ---
 
@@ -347,6 +349,8 @@ gradle test --tests 'dev.nexobedrock.SmokeRealPackTest'
 
 As saídas do smoke test ficam em `build/`, sem alterar o pack de origem.
 
-### Licença
+### Independência e licença
 
 Este repositório ainda não contém um arquivo `LICENSE`. Defina a licença do projeto antes de redistribuí-lo ou aceitar contribuições que possam ter requisitos de licenciamento.
+
+O NexoBedrock é um projeto independente, sem fins lucrativos e desenvolvido sem objetivo de lucro. Nenhum código-fonte original nem código do plugin Nexo ou da extensão Scaffolding do Nexo foi copiado ou utilizado neste projeto; o NexoBedrock foi implementado de forma independente, com base em APIs e documentação disponíveis publicamente. O projeto não é afiliado, endossado nem um produto oficial do Nexo ou dos responsáveis pela extensão Scaffolding. Os nomes e marcas Nexo e Scaffolding pertencem aos seus respectivos proprietários.
