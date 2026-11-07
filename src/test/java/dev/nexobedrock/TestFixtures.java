@@ -25,7 +25,8 @@ public final class TestFixtures {
                 "nexobedrock", false, "geyser reload", true, true, 10,
                 true, true, 100, false,
                 MappingMode.LEGACY, "nexobedrock", "items", HandheldMode.AUTO,
-                new int[]{1, 20, 0}, 64, 256, true, "entity_alphatest_one_sided"
+                new int[]{1, 20, 0}, 64, 256, true, "entity_alphatest_one_sided",
+                true, dev.nexobedrock.config.BedrockTextMode.LEGACY
         );
     }
 

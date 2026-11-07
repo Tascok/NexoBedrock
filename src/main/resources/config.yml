@@ -9,6 +9,14 @@
 
 enabled: true
 
+# Formatação dos nomes display_name nos mappings Geyser (texto do item Nexo).
+# O plugin não intercepta mensagens/chat de outros plugins.
+bedrock-text:
+  enabled: true
+  # legacy preserva estilos e aproxima RGB/gradientes às 16 cores Bedrock.
+  # plain remove estilos. Fontes Java customizadas exigem glyphs e um pack Bedrock.
+  output: "legacy"
+
 # Converte automaticamente quando o Nexo termina de gerar o pack.
 auto-convert-on-pack-generate: true
 

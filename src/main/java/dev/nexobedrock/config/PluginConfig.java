@@ -32,7 +32,9 @@ public record PluginConfig(
         int maxAtlasTiles,
         int maxAtlasTileSize,
         boolean keepOutputCopy,
-        String attachableMaterial
+        String attachableMaterial,
+        boolean bedrockTextFormatting,
+        BedrockTextMode bedrockTextMode
 ) {
     public static PluginConfig from(FileConfiguration config) {
         List<Integer> minEngine = config.getIntegerList("conversion.min-engine-version");
@@ -70,7 +72,9 @@ public record PluginConfig(
                 Math.max(16, config.getInt("conversion.max-atlas-tile-size", 256)),
                 config.getBoolean("conversion.keep-output-copy", true),
                 sanitizeMaterial(config.getString("geyser.attachable-material",
-                        "entity_alphatest_one_sided"))
+                        "entity_alphatest_one_sided")),
+                config.getBoolean("bedrock-text.enabled", true),
+                BedrockTextMode.parse(config.getString("bedrock-text.output", "legacy"))
         );
     }
 
@@ -103,7 +107,8 @@ public record PluginConfig(
                 "minEngine=" + minEngineVersion[0] + "." + minEngineVersion[1] + "." + minEngineVersion[2],
                 "atlasTiles=" + maxAtlasTiles,
                 "atlasSize=" + maxAtlasTileSize,
-                "attachable=" + attachableMaterial
+                "attachable=" + attachableMaterial,
+                "bedrockText=" + bedrockTextFormatting + ":" + bedrockTextMode
         );
         return Hashing.sha256Hex(canonical);
     }

@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "dev.nexobedrock"
-version = "0.1.8"
+version = "0.1.9"
 
 val paperVersion = "1.21.10-R0.1-SNAPSHOT"
 val nexoVersion = "1.29.1"
@@ -21,7 +21,7 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
     testImplementation("com.google.code.gson:gson:$gsonVersion")
-    testRuntimeOnly("io.papermc.paper:paper-api:$paperVersion")
+    testImplementation("io.papermc.paper:paper-api:$paperVersion")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

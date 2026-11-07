@@ -112,7 +112,7 @@ public final class ConversionService {
 
         NexoItemIndex nexoIndex;
         try {
-            nexoIndex = NexoItemIndex.capture();
+            nexoIndex = NexoItemIndex.capture(configSupplier.get());
         } catch (Throwable throwable) {
             nexoIndex = NexoItemIndex.empty();
             logger.warning("NexoBedrock: falha ao capturar itens do Nexo: "

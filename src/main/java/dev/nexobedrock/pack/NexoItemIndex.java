@@ -1,9 +1,10 @@
 package dev.nexobedrock.pack;
 
 import dev.nexobedrock.config.MappingMode;
+import dev.nexobedrock.config.PluginConfig;
+import dev.nexobedrock.util.BedrockTextFormatter;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -21,7 +22,7 @@ public record NexoItemIndex(List<JavaItemEntry> entries, List<String> warnings) 
         return new NexoItemIndex(List.of(), List.of());
     }
 
-    public static NexoItemIndex capture() {
+    public static NexoItemIndex capture(PluginConfig config) {
         List<JavaItemEntry> entries = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
         try {
@@ -34,7 +35,7 @@ public record NexoItemIndex(List<JavaItemEntry> entries, List<String> warnings) 
         try {
             for (com.nexomc.nexo.items.ItemBuilder item : com.nexomc.nexo.api.NexoItems.items()) {
                 try {
-                    JavaItemEntry entry = toEntry(item);
+                    JavaItemEntry entry = toEntry(item, config);
                     if (entry != null) {
                         entries.add(entry);
                     }
@@ -49,7 +50,8 @@ public record NexoItemIndex(List<JavaItemEntry> entries, List<String> warnings) 
         return new NexoItemIndex(List.copyOf(entries), List.copyOf(warnings));
     }
 
-    private static JavaItemEntry toEntry(com.nexomc.nexo.items.ItemBuilder item) {
+    private static JavaItemEntry toEntry(com.nexomc.nexo.items.ItemBuilder item,
+                                         PluginConfig config) {
         String id = com.nexomc.nexo.api.NexoItems.idFromItem(item);
         if (id == null || id.isBlank()) {
             return null;
@@ -97,9 +99,10 @@ public record NexoItemIndex(List<JavaItemEntry> entries, List<String> warnings) 
         String displayName = id;
         Component itemName = item.getItemName();
         if (itemName != null) {
-            String plain = PlainTextComponentSerializer.plainText().serialize(itemName);
-            if (!plain.isBlank()) {
-                displayName = plain;
+            String formatted = BedrockTextFormatter.format(itemName,
+                    config.bedrockTextFormatting(), config.bedrockTextMode());
+            if (!formatted.isBlank()) {
+                displayName = formatted;
             }
         }
 
