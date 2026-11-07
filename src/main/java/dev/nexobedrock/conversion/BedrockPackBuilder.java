@@ -40,7 +40,8 @@ public final class BedrockPackBuilder {
             int unsupported,
             int skipped,
             int failed,
-            long sizeBytes
+            long sizeBytes,
+            Map<String, String> glyphRewrites
     ) {
     }
 
@@ -50,8 +51,15 @@ public final class BedrockPackBuilder {
     }
 
     public BuildResult build(JavaPack pack, List<JavaItemEntry> entries, PluginConfig config,
-                             String packHash, String pluginVersion, Path workDir,
-                             Map<String, NexoArmorIndex.Armor> armor) throws IOException {
+                              String packHash, String pluginVersion, Path workDir,
+                              Map<String, NexoArmorIndex.Armor> armor) throws IOException {
+        return build(pack, entries, config, packHash, pluginVersion, workDir, armor, List.of());
+    }
+
+    public BuildResult build(JavaPack pack, List<JavaItemEntry> entries, PluginConfig config,
+                              String packHash, String pluginVersion, Path workDir,
+                              Map<String, NexoArmorIndex.Armor> armor,
+                              List<String> extraGlyphTexts) throws IOException {
         Path packRoot = workDir.resolve("pack");
         Files.createDirectories(packRoot);
 
@@ -106,7 +114,9 @@ public final class BedrockPackBuilder {
                 Json.prettyBytes(disableAnimation()));
         textures.writeBytes("pack_icon.png", new IconFactory().packIcon(firstIcon));
 
-        List<String> displayNames = converted.stream().map(item -> item.entry().displayName()).toList();
+        List<String> displayNames = new ArrayList<>(converted.stream()
+                .map(item -> item.entry().displayName()).toList());
+        if (extraGlyphTexts != null) displayNames.addAll(extraGlyphTexts);
         GradientGlyphAtlas.Result glyphAtlas = new GradientGlyphAtlas().build(displayNames);
         for (Map.Entry<String, byte[]> page : glyphAtlas.pages().entrySet()) {
             textures.writeBytes(page.getKey(), page.getValue());
@@ -140,7 +150,7 @@ public final class BedrockPackBuilder {
 
         return new BuildResult(mcpack, List.copyOf(converted), List.copyOf(reports),
                 List.copyOf(warnings), flat, threeD, unsupported, skipped, failed,
-                Files.size(mcpack));
+                Files.size(mcpack), glyphAtlas.rewritten());
     }
 
     private String allocateId(String namespace, JavaItemEntry entry, Set<String> usedIds) {

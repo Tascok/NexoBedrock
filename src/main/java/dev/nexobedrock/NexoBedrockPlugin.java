@@ -7,13 +7,18 @@ import dev.nexobedrock.conversion.ConversionService;
 import dev.nexobedrock.listener.NexoPackListener;
 import dev.nexobedrock.listener.BedrockItemNamePacketListener;
 import dev.nexobedrock.hologram.FancyHologramBedrockBridge;
+import dev.nexobedrock.bedrock.GlyphTextMap;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class NexoBedrockPlugin extends JavaPlugin {
     private final AtomicReference<PluginConfig> config = new AtomicReference<>();
+    private final AtomicReference<Map<String, String>> glyphTextMap = new AtomicReference<>(Map.of());
     private ConversionService conversionService;
     private FancyHologramBedrockBridge hologramBridge;
 
@@ -21,6 +26,7 @@ public final class NexoBedrockPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         reloadPluginConfig();
+        loadGlyphTextMap();
 
         conversionService = new ConversionService(this, config::get,
                 getDescription().getVersion());
@@ -50,7 +56,7 @@ public final class NexoBedrockPlugin extends JavaPlugin {
                 && getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
             String prefix = getConfig().getString("holograms.bedrock-name-prefix", ".");
             new BedrockItemNamePacketListener(this, prefix).register();
-            getLogger().info("Nomes RGB dos itens por pacote ativos para jogadores com prefixo Floodgate '"
+            getLogger().info("Substituicao por glyphs dos nomes de itens ativa para prefixo Floodgate '"
                     + prefix + "'.");
         } else if (!getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
             getLogger().warning("ProtocolLib nao encontrado; reescrita RGB dos nomes de itens desativada.");
@@ -59,6 +65,7 @@ public final class NexoBedrockPlugin extends JavaPlugin {
         if (getServer().getPluginManager().isPluginEnabled("FancyHolograms")) {
             hologramBridge = new FancyHologramBedrockBridge(this,
                     getConfig().getString("holograms.bedrock-name-prefix", "."));
+            hologramBridge.setGlyphRewrites(glyphTextMap.get());
             hologramBridge.start(getConfig().getBoolean("holograms.enabled", false));
             getLogger().info("Integração Bedrock/FancyHolograms: "
                     + (hologramBridge.isEnabled() ? "ativa" : "desativada") + ".");
@@ -83,6 +90,8 @@ public final class NexoBedrockPlugin extends JavaPlugin {
 
     public void reloadPluginConfig() {
         reloadConfig();
+        getConfig().options().copyDefaults(true);
+        saveConfig();
         config.set(PluginConfig.from(getConfig()));
         if (hologramBridge != null) {
             hologramBridge.setEnabled(getConfig().getBoolean("holograms.enabled", false));
@@ -104,5 +113,35 @@ public final class NexoBedrockPlugin extends JavaPlugin {
 
     public FancyHologramBedrockBridge getHologramBridge() {
         return hologramBridge;
+    }
+
+    public Map<String, String> getGlyphTextMap() {
+        return glyphTextMap.get();
+    }
+
+    public void setGlyphTextMap(Map<String, String> glyphs) {
+        Map<String, String> safe = glyphs == null ? Map.of() : Map.copyOf(glyphs);
+        glyphTextMap.set(safe);
+        Runnable apply = () -> {
+            FancyHologramBedrockBridge bridge = hologramBridge;
+            if (bridge != null) bridge.setGlyphRewrites(safe);
+            String prefix = getConfig().getString("holograms.bedrock-name-prefix", ".");
+            if (prefix == null || prefix.isEmpty()) return;
+            getServer().getOnlinePlayers().stream()
+                    .filter(player -> player.getName().startsWith(prefix))
+                    .forEach(org.bukkit.entity.Player::updateInventory);
+        };
+        if (getServer().isPrimaryThread()) apply.run();
+        else getServer().getScheduler().runTask(this, apply);
+    }
+
+    private void loadGlyphTextMap() {
+        Path path = getDataFolder().toPath().resolve("glyph-map.json");
+        if (!Files.isRegularFile(path)) return;
+        try {
+            setGlyphTextMap(GlyphTextMap.decode(Files.readAllBytes(path)));
+        } catch (Exception exception) {
+            getLogger().warning("Mapa de glyphs Bedrock invalido; textos serao exibidos sem reescrita.");
+        }
     }
 }

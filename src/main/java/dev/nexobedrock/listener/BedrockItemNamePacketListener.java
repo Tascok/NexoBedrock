@@ -63,7 +63,7 @@ public final class BedrockItemNamePacketListener {
     private void rewriteSingleItem(PacketEvent event) {
         var modifier = event.getPacket().getItemModifier();
         for (int i = 0; i < modifier.size(); i++) {
-            ItemStack rewritten = withRgbDisplayName(modifier.readSafely(i));
+            ItemStack rewritten = withGlyphDisplayName(modifier.readSafely(i));
             if (rewritten != null) modifier.write(i, rewritten);
         }
     }
@@ -75,7 +75,7 @@ public final class BedrockItemNamePacketListener {
             if (items == null) continue;
             List<ItemStack> rewritten = new ArrayList<>(items);
             for (int slot = 0; slot < rewritten.size(); slot++) {
-                ItemStack withName = withRgbDisplayName(rewritten.get(slot));
+                ItemStack withName = withGlyphDisplayName(rewritten.get(slot));
                 if (withName != null) rewritten.set(slot, withName);
             }
             modifier.write(i, rewritten);
@@ -91,21 +91,24 @@ public final class BedrockItemNamePacketListener {
             List<Pair<com.comphenix.protocol.wrappers.EnumWrappers.ItemSlot, ItemStack>> rewritten =
                     new ArrayList<>(pairs.size());
             for (var pair : pairs) {
-                ItemStack withName = withRgbDisplayName(pair.getSecond());
+                ItemStack withName = withGlyphDisplayName(pair.getSecond());
                 rewritten.add(new Pair<>(pair.getFirst(), withName == null ? pair.getSecond() : withName));
             }
             modifier.write(i, rewritten);
         }
     }
 
-    private ItemStack withRgbDisplayName(ItemStack original) {
+    private ItemStack withGlyphDisplayName(ItemStack original) {
         if (original == null || original.getType().isAir() || !original.hasItemMeta()) return null;
-        ItemStack copy = original.clone();
-        ItemMeta meta = copy.getItemMeta();
+        ItemMeta meta = original.getItemMeta();
         if (meta == null || meta.displayName() == null) return null;
-        String rgb = HEX.serialize(meta.displayName());
-        if (!rgb.contains("\u00a7x")) return null;
-        meta.displayName(Component.text(rgb));
+        String source = HEX.serialize(meta.displayName());
+        String glyphs = plugin.getGlyphTextMap().get(source);
+        if (glyphs == null || glyphs.equals(source)) return null;
+        ItemStack copy = original.clone();
+        meta = copy.getItemMeta();
+        if (meta == null) return null;
+        meta.displayName(Component.text(glyphs));
         copy.setItemMeta(meta);
         return copy;
     }

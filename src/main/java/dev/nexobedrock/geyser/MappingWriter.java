@@ -34,6 +34,11 @@ public final class MappingWriter {
         } catch (java.io.IOException exception) {
             throw new IllegalStateException("Could not generate Bedrock text glyph mapping", exception);
         }
+        return write(items, config, glyphNames);
+    }
+
+    public byte[] write(List<ConvertedItem> items, PluginConfig config,
+                        Map<String, String> glyphNames) {
         Map<String, List<JsonObject>> byItem = new LinkedHashMap<>();
         Set<String> seen = new HashSet<>();
 
