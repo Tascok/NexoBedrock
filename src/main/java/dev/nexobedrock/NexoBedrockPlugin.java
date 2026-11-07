@@ -2,8 +2,10 @@ package dev.nexobedrock;
 
 import dev.nexobedrock.command.NexoBedrockCommand;
 import dev.nexobedrock.config.PluginConfig;
+import dev.nexobedrock.config.BedrockTextMode;
 import dev.nexobedrock.conversion.ConversionService;
 import dev.nexobedrock.listener.NexoPackListener;
+import dev.nexobedrock.listener.BedrockHologramPacketListener;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -39,6 +41,17 @@ public final class NexoBedrockPlugin extends JavaPlugin {
         } catch (Throwable throwable) {
             getLogger().warning("NexoBedrock: nao foi possivel registrar os eventos do Nexo: "
                     + throwable.getClass().getSimpleName() + ": " + throwable.getMessage());
+        }
+
+        if (config.get().bedrockTextFormatting()
+                && config.get().bedrockTextMode() == BedrockTextMode.LEGACY
+                && getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
+            String prefix = getConfig().getString("holograms.bedrock-name-prefix", ".");
+            new BedrockHologramPacketListener(this, prefix).register();
+            getLogger().info("Hologramas RGB por pacote ativos para jogadores com prefixo Floodgate '"
+                    + prefix + "'.");
+        } else if (!getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
+            getLogger().warning("ProtocolLib nao encontrado; hologramas RGB por jogador Bedrock desativados.");
         }
 
         getLogger().info("NexoBedrock habilitado. Modo de mapping: "

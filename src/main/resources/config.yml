@@ -17,6 +17,11 @@ bedrock-text:
   # plain remove estilos; também utiliza glyphs para colorir os caracteres.
   output: "legacy"
 
+# Identificação de jogadores Floodgate no backend atrás do Velocity.
+# O prefixo deve corresponder a Floodgate-Velocity (padrão: ".").
+holograms:
+  bedrock-name-prefix: "."
+
 # Converte automaticamente quando o Nexo termina de gerar o pack.
 auto-convert-on-pack-generate: true
 

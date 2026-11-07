@@ -5,7 +5,7 @@ api-version: '1.21'
 description: Converte o resource pack do Nexo para Bedrock/Geyser.
 authors: [NexoBedrock]
 depend: [Nexo]
-softdepend: [Geyser-Spigot, floodgate]
+softdepend: [Geyser-Spigot, floodgate, ProtocolLib]
 
 commands:
   nexobedrock:

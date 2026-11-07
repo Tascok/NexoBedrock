@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "dev.nexobedrock"
-version = "0.1.10"
+version = "0.1.11"
 
 val paperVersion = "1.21.10-R0.1-SNAPSHOT"
 val nexoVersion = "1.29.1"
@@ -18,6 +18,7 @@ dependencies {
     // Provided by the Nexo plugin at runtime. We intentionally only use the
     // stable public API surface (NexoItems / ItemBuilder / NexoMeta).
     compileOnly("com.nexomc:nexo:$nexoVersion")
+    compileOnly("net.dmulloy2:ProtocolLib:5.4.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
     testImplementation("com.google.code.gson:gson:$gsonVersion")

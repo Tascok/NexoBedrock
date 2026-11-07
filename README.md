@@ -126,6 +126,7 @@ conversion:
 - `namespace`: Bedrock item namespace; it cannot be `minecraft`.
 - `creative-category`: one of `all`, `construction`, `nature`, `equipment`, `items`, `item_command_only`, or `none`.
 - `display-handheld`: `auto`, `true`, or `false`.
+- `holograms.bedrock-name-prefix`: Floodgate username prefix used to scope RGB packet rewriting to Bedrock players; defaults to `.`. ProtocolLib must be installed on the Paper backend.
 - `max-pack-size-mb`: input/output size limit. If the generated pack exceeds it, existing Geyser files are left untouched.
 - `max-atlas-tiles` / `max-atlas-tile-size`: protect against unusually large texture atlases.
 - `keep-output-copy`: also keeps a copy under `plugins/NexoBedrock/output/`.
@@ -141,7 +142,7 @@ custom_mappings/nexobedrock.json
 
 Under `plugins/NexoBedrock/`, the plugin can keep backups, a conversion cache, an optional output copy, timestamped reports, and temporary work files. Temporary files are removed after conversion unless debug mode is enabled.
 
-The `.mcpack` includes item icons, converted 3D atlases and geometry, item attachables and animations, armor attachables and equipped textures, a manifest, and a pack icon. Geyser mappings use schema v2 (`format_version: 2`).
+The `.mcpack` includes item icons, converted 3D atlases and geometry, item attachables and animations, armor attachables and equipped textures, RGB font glyph pages, a manifest, and a pack icon. Geyser mappings use schema v2 (`format_version: 2`).
 
 ### Conversion overview
 
@@ -299,6 +300,7 @@ conversion:
 - `namespace`: namespace dos itens Bedrock; não pode ser `minecraft`.
 - `creative-category`: uma destas opções: `all`, `construction`, `nature`, `equipment`, `items`, `item_command_only` ou `none`.
 - `display-handheld`: `auto`, `true` ou `false`.
+- `holograms.bedrock-name-prefix`: prefixo de usuário do Floodgate usado para limitar a reescrita RGB dos pacotes aos jogadores Bedrock; o padrão é `.`. ProtocolLib precisa estar instalado no backend Paper.
 - `max-pack-size-mb`: limite de tamanho de entrada/saída. Se o pack gerado exceder o limite, os arquivos existentes do Geyser são preservados.
 - `max-atlas-tiles` / `max-atlas-tile-size`: protegem contra atlas de textura excepcionalmente grandes.
 - `keep-output-copy`: também mantém uma cópia em `plugins/NexoBedrock/output/`.
@@ -314,7 +316,7 @@ custom_mappings/nexobedrock.json
 
 Em `plugins/NexoBedrock/`, o plugin pode manter backups, cache de conversões, uma cópia opcional da saída, relatórios com timestamp e arquivos temporários. Os arquivos temporários são removidos após a conversão, exceto quando o modo debug está habilitado.
 
-O `.mcpack` inclui ícones, atlas e geometria de itens 3D, attachables e animações dos itens, attachables e texturas equipadas de armadura, manifesto e ícone do pack. Os mappings do Geyser usam o schema v2 (`format_version: 2`).
+O `.mcpack` inclui ícones, atlas e geometria de itens 3D, attachables e animações dos itens, attachables e texturas equipadas de armadura, páginas de glyphs RGB, manifesto e ícone do pack. Os mappings do Geyser usam o schema v2 (`format_version: 2`).
 
 ### Como a conversão funciona
 

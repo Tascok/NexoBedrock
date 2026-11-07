@@ -30,7 +30,7 @@ public final class GradientGlyphAtlas {
         List<Glyph> glyphs = new ArrayList<>();
         for (String name : names) {
             if (name == null || rewritten.containsKey(name)) continue;
-            StringBuilder output = new StringBuilder();
+            List<Token> tokens = new ArrayList<>();
             int color = 0xFFFFFF;
             for (int i = 0; i < name.length();) {
                 char current = name.charAt(i);
@@ -47,17 +47,28 @@ public final class GradientGlyphAtlas {
                 }
                 int codePoint = name.codePointAt(i);
                 i += Character.charCount(codePoint);
+                tokens.add(new Token(codePoint, color));
+            }
+
+            StringBuilder output = new StringBuilder();
+            for (int i = 0; i < tokens.size(); i++) {
+                Token token = tokens.get(i);
+                int codePoint = token.character();
                 if (Character.isISOControl(codePoint) || Character.isWhitespace(codePoint)) {
                     output.appendCodePoint(codePoint);
                     continue;
                 }
-                String key = new String(Character.toChars(codePoint)) + ':' + color;
+                int endColor = token.rgb();
+                if (i + 1 < tokens.size() && !Character.isWhitespace(tokens.get(i + 1).character())) {
+                    endColor = tokens.get(i + 1).rgb();
+                }
+                String key = codePoint + ":" + token.rgb() + ":" + endColor;
                 Integer glyph = glyphIds.get(key);
                 if (glyph == null) {
                     glyph = FIRST + glyphs.size();
                     if (glyph > LAST) throw new IOException("Too many unique colored glyphs (limit 5888)");
                     glyphIds.put(key, glyph);
-                    glyphs.add(new Glyph(codePoint, color));
+                    glyphs.add(new Glyph(codePoint, token.rgb(), endColor));
                 }
                 output.appendCodePoint(glyph);
             }
@@ -81,11 +92,14 @@ public final class GradientGlyphAtlas {
             graphics.setColor(Color.WHITE);
             graphics.drawString(new String(Character.toChars(glyph.character())), 1, 13);
             graphics.dispose();
-            int rgb = glyph.rgb();
             for (int py = 0; py < CELL; py++) {
                 for (int px = 0; px < CELL; px++) {
                     int alpha = mask.getRGB(px, py) >>> 24;
-                    if (alpha != 0) image.setRGB(x + px, y + py, (alpha << 24) | rgb);
+                    if (alpha != 0) {
+                        float progress = px / (float) (CELL - 1);
+                        int rgb = interpolate(glyph.startRgb(), glyph.endRgb(), progress);
+                        image.setRGB(x + px, y + py, (alpha << 24) | rgb);
+                    }
                 }
             }
         }
@@ -120,5 +134,13 @@ public final class GradientGlyphAtlas {
     }
 
     private record ColorCode(int rgb, int length) { }
-    private record Glyph(int character, int rgb) { }
+    private record Token(int character, int rgb) { }
+    private record Glyph(int character, int startRgb, int endRgb) { }
+
+    private static int interpolate(int start, int end, float progress) {
+        int r = Math.round(((start >> 16) & 0xFF) * (1 - progress) + ((end >> 16) & 0xFF) * progress);
+        int g = Math.round(((start >> 8) & 0xFF) * (1 - progress) + ((end >> 8) & 0xFF) * progress);
+        int b = Math.round((start & 0xFF) * (1 - progress) + (end & 0xFF) * progress);
+        return (r << 16) | (g << 8) | b;
+    }
 }
