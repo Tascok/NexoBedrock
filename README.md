@@ -179,11 +179,14 @@ gradle test --tests 'dev.nexobedrock.SmokeRealPackTest'
 
 Smoke-test output is written under `build/`, not into the source pack.
 
-### Project independence and license
+### Independence, support, and license
 
-This repository does not currently include a `LICENSE` file. Please clarify the project's license before redistributing it or accepting contributions that may have licensing requirements.
+- **Independent project:** NexoBedrock is developed independently and without a profit motive. No original source code from the Nexo plugin, Scaffolding, or the ScaffoldingExtension was copied or used. This project is not affiliated with, endorsed by, or an official product of their developers.
+- **Support for NexoBedrock:** For bugs, setup questions, or other issues with this plugin, [open an issue in this repository](https://github.com/Tascok/NexoBedrock/issues). Do not contact Nexo or Scaffolding support for NexoBedrock issues; those teams are not responsible for this project.
+- **Upstream projects (reference links only):** [Nexo plugin](https://nexomc.com/products/nexo) · [Scaffolding addon](https://nexomc.com/products/scaffolding) · [Scaffolding documentation and companion extension](https://docs.nexomc.com/addons/scaffolding).
+- **License:** This repository does not currently include a `LICENSE` file. Please clarify the project's license before redistributing it or accepting contributions that may have licensing requirements.
 
-NexoBedrock is an independent, non-commercial project developed without a profit motive. No original source code or code from the Nexo plugin or Nexo's Scaffolding extension was copied or used in this project; NexoBedrock was implemented independently using publicly available APIs and documentation. It is not affiliated with, endorsed by, or an official product of Nexo or the Scaffolding extension's maintainers. Nexo and Scaffolding names and trademarks belong to their respective owners.
+The Nexo and Scaffolding names and trademarks belong to their respective owners.
 
 ---
 
@@ -349,8 +352,11 @@ gradle test --tests 'dev.nexobedrock.SmokeRealPackTest'
 
 As saídas do smoke test ficam em `build/`, sem alterar o pack de origem.
 
-### Independência e licença
+### Independência, suporte e licença
 
-Este repositório ainda não contém um arquivo `LICENSE`. Defina a licença do projeto antes de redistribuí-lo ou aceitar contribuições que possam ter requisitos de licenciamento.
+- **Projeto independente:** O NexoBedrock é desenvolvido de forma independente e sem objetivo de lucro. Nenhum código-fonte original do plugin Nexo, do Scaffolding ou do ScaffoldingExtension foi copiado ou utilizado. Este projeto não é afiliado, endossado nem um produto oficial de seus desenvolvedores.
+- **Suporte ao NexoBedrock:** Para bugs, dúvidas de instalação ou outros problemas com este plugin, [abra uma issue neste repositório](https://github.com/Tascok/NexoBedrock/issues). Não procure o suporte do Nexo ou do Scaffolding para problemas do NexoBedrock; as equipes deles não são responsáveis por este projeto.
+- **Projetos upstream (links apenas para referência):** [Plugin Nexo](https://nexomc.com/products/nexo) · [Addon Scaffolding](https://nexomc.com/products/scaffolding) · [Documentação do Scaffolding e extensão complementar](https://docs.nexomc.com/addons/scaffolding).
+- **Licença:** Este repositório ainda não contém um arquivo `LICENSE`. Defina a licença do projeto antes de redistribuí-lo ou aceitar contribuições que possam ter requisitos de licenciamento.
 
-O NexoBedrock é um projeto independente, sem fins lucrativos e desenvolvido sem objetivo de lucro. Nenhum código-fonte original nem código do plugin Nexo ou da extensão Scaffolding do Nexo foi copiado ou utilizado neste projeto; o NexoBedrock foi implementado de forma independente, com base em APIs e documentação disponíveis publicamente. O projeto não é afiliado, endossado nem um produto oficial do Nexo ou dos responsáveis pela extensão Scaffolding. Os nomes e marcas Nexo e Scaffolding pertencem aos seus respectivos proprietários.
+Os nomes e marcas Nexo e Scaffolding pertencem aos seus respectivos proprietários.
