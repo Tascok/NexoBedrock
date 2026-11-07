@@ -1,0 +1,77 @@
+# NexoBedrock - configuracao
+#
+# O plugin le o pack gerado pelo Nexo e produz:
+#   - um resource pack Bedrock (.mcpack)
+#   - um arquivo de custom mappings do Geyser (format_version 2)
+#   - um report.json com o resultado item a item
+#
+# Caminhos relativos sao resolvidos a partir da raiz do servidor.
+
+enabled: true
+
+# Converte automaticamente quando o Nexo termina de gerar o pack.
+auto-convert-on-pack-generate: true
+
+source:
+  # Pack final do Nexo (fallback e fonte do comando manual).
+  pack-path: "plugins/Nexo/pack/pack.zip"
+  # Diretorio de assets pre-obfuscacao. No evento, este diretorio e preferido
+  # para que a conversao aconteca antes da obfuscacao do Nexo.
+  assets-path: "plugins/Nexo/pack/assets"
+  # Se true, usa assets-path no evento quando ele existir.
+  prefer-assets-on-event: true
+
+geyser:
+  # Geyser-Spigot local. Para Geyser-Velocity, aponte para os diretorios do proxy.
+  packs-folder: "plugins/Geyser-Spigot/packs"
+  mappings-folder: "plugins/Geyser-Spigot/custom_mappings"
+  pack-name: "nexobedrock"
+  # Executa "geyser reload" depois do deploy. Um restart completo do Geyser
+  # pode ser necessario para recarregar custom mappings.
+  restart-geyser: false
+  reload-command: "geyser reload"
+  # Cria os diretorios se nao existirem.
+  create-folders: true
+  # Faz backup do pack/mappings anteriores antes de sobrescrever.
+  backup: true
+  backup-keep: 10
+
+  # Material usado nos attachables de itens 3D.
+  # entity_alphatest_one_sided (padrao) ou entity_alphatest.
+  attachable-material: "entity_alphatest_one_sided"
+
+conversion:
+  include-2d: true
+  include-3d: true
+  # Limite de seguranca para entrada e saida. Acima disso a conversao falha
+  # sem tocar nos arquivos antigos do Geyser.
+  max-pack-size-mb: 100
+  debug: false
+
+  # "legacy" prioriza custom_model_data; "modern" prioriza item_model;
+  # "auto" usa modern quando existir item_model e legacy caso contrario.
+  mapping-mode: "legacy"
+
+  # Namespace dos itens Bedrock. Nao pode ser "minecraft".
+  namespace: "nexobedrock"
+
+  # Categoria criativa do Geyser: all, construction, nature, equipment, items,
+  # item_command_only ou none.
+  creative-category: "items"
+
+  # auto = true para ferramentas/armas e modelos com parent handheld;
+  # true/false forcam o valor em todos os itens.
+  display-handheld: "auto"
+
+  # Versao minima do Bedrock usada no manifest.
+  min-engine-version: [1, 20, 0]
+
+  # Limite de tiles do atlas por modelo (protecao contra modelos patologicos).
+  max-atlas-tiles: 64
+
+  # Tamanho maximo (em pixels) de cada tile do atlas.
+  max-atlas-tile-size: 256
+
+  # Se true, copia o pack/mappings tambem para plugins/NexoBedrock/output
+  # mesmo quando o deploy no Geyser funcionar.
+  keep-output-copy: true

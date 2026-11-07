@@ -1,0 +1,20 @@
+name: NexoBedrock
+version: '${version}'
+main: dev.nexobedrock.NexoBedrockPlugin
+api-version: '1.21'
+description: Converte o resource pack do Nexo para Bedrock/Geyser.
+authors: [NexoBedrock]
+depend: [Nexo]
+softdepend: [Geyser-Spigot, floodgate]
+
+commands:
+  nexobedrock:
+    description: Gerencia a conversão do pack do Nexo para Bedrock.
+    usage: /nexobedrock <convert|status|reload|report>
+    aliases: [nb, nexob]
+    permission: nexobedrock.admin
+
+permissions:
+  nexobedrock.admin:
+    description: Permite usar os comandos do NexoBedrock.
+    default: op
