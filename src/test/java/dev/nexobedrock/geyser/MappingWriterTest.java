@@ -89,4 +89,22 @@ class MappingWriterTest {
                 .getAsJsonObject("bedrock_options").get("creative_category").getAsString();
         assertEquals("items", category);
     }
+
+    @Test
+    void rewritesDisplayNameToPrivateUseGlyphs() {
+        JavaItemEntry entry = new JavaItemEntry("gradient", "minecraft:paper",
+                MappingMode.LEGACY, 7, null, "default/gradient",
+                "\u00a7x\u00a7f\u00a7f\u00a70\u00a70\u00a70\u00a70G"
+                        + "\u00a7x\u00a70\u00a70\u00a7f\u00a7f\u00a7f\u00a7fP",
+                java.util.Set.of(), "test");
+        ConvertedItem item = TestFixtures.converted(entry, "nexobedrock:gradient",
+                "nexobedrock.gradient", false);
+        JsonObject root = Json.parseObject(new MappingWriter().write(List.of(item),
+                TestFixtures.config()));
+        String name = root.getAsJsonObject("items").getAsJsonArray("minecraft:paper")
+                .get(0).getAsJsonObject().get("display_name").getAsString();
+        assertEquals(2, name.codePointCount(0, name.length()));
+        assertTrue(name.codePointAt(0) >= 0xE200 && name.codePointAt(0) <= 0xF8FF);
+        assertTrue(name.codePointAt(1) >= 0xE200 && name.codePointAt(1) <= 0xF8FF);
+    }
 }

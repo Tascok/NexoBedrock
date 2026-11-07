@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.nexobedrock.config.MappingMode;
 import dev.nexobedrock.config.PluginConfig;
+import dev.nexobedrock.bedrock.GradientGlyphAtlas;
 import dev.nexobedrock.conversion.ConvertedItem;
 import dev.nexobedrock.pack.JavaItemEntry;
 import dev.nexobedrock.util.Json;
@@ -26,6 +27,13 @@ public final class MappingWriter {
                     "item_command_only", "none");
 
     public byte[] write(List<ConvertedItem> items, PluginConfig config) {
+        Map<String, String> glyphNames;
+        try {
+            glyphNames = new GradientGlyphAtlas().build(items.stream()
+                    .map(item -> item.entry().displayName()).toList()).rewritten();
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Could not generate Bedrock text glyph mapping", exception);
+        }
         Map<String, List<JsonObject>> byItem = new LinkedHashMap<>();
         Set<String> seen = new HashSet<>();
 
@@ -53,7 +61,8 @@ public final class MappingWriter {
 
             definition.addProperty("bedrock_identifier", item.bedrockId());
             if (entry.displayName() != null && !entry.displayName().isBlank()) {
-                definition.addProperty("display_name", entry.displayName());
+                definition.addProperty("display_name", glyphNames.getOrDefault(
+                        entry.displayName(), entry.displayName()));
             }
 
             JsonObject options = new JsonObject();

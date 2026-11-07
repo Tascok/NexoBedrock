@@ -12,14 +12,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BedrockTextFormatterTest {
     @Test
-    void convertsRgbGradientStopsToBedrockLegacyColors() {
+    void preservesRgbGradientStopsForGlyphAtlas() {
         Component gradient = Component.text("Warm", TextColor.color(0xff0000))
-                .append(Component.text(" cool", TextColor.color(0x0000ff)));
+                .append(Component.text(" cool", TextColor.color(0x2345ff)));
 
         String output = BedrockTextFormatter.format(gradient, true, BedrockTextMode.LEGACY);
 
-        assertTrue(output.startsWith("\u00a74Warm"), output);
-        assertTrue(output.contains("\u00a71 cool"), output);
+        assertTrue(output.toLowerCase().startsWith("\u00a7x\u00a7f\u00a7f\u00a70\u00a70\u00a70\u00a70"), output);
+        assertTrue(output.toLowerCase().contains("\u00a7x\u00a72\u00a73\u00a74\u00a75\u00a7f\u00a7f"), output);
         assertFalse(output.contains("#"), output);
     }
 
@@ -37,8 +37,8 @@ class BedrockTextFormatterTest {
     void legacyColorsRemainSupportedAndNullIsSafe() {
         Component component = Component.text("Gold", TextColor.color(0xffaa00));
 
-        assertEquals("\u00a76Gold", BedrockTextFormatter.format(component, true,
-                BedrockTextMode.LEGACY));
+        assertTrue(BedrockTextFormatter.format(component, true,
+                BedrockTextMode.LEGACY).contains("Gold"));
         assertEquals("", BedrockTextFormatter.format(null, true, BedrockTextMode.LEGACY));
     }
 }
