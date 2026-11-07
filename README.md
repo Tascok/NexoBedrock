@@ -9,6 +9,7 @@
   <a href="https://papermc.io/"><img alt="Paper and Purpur 1.21+" src="https://img.shields.io/badge/Paper%20%2F%20Purpur-1.21%2B-2f81f7"></a>
   <a href="https://geysermc.org/"><img alt="Geyser custom mappings v2" src="https://img.shields.io/badge/Geyser-custom%20mappings%20v2-37a78b"></a>
   <img alt="Gradle" src="https://img.shields.io/badge/build-Gradle-02303A?logo=gradle&logoColor=white">
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
 </p>
 
 **English:** [Read the English documentation](#english)
@@ -184,7 +185,7 @@ Smoke-test output is written under `build/`, not into the source pack.
 - **Independent project:** NexoBedrock is developed independently and without a profit motive. No original source code from the Nexo plugin, Scaffolding, or the ScaffoldingExtension was copied or used. This project is not affiliated with, endorsed by, or an official product of their developers.
 - **Support for NexoBedrock:** For bugs, setup questions, or other issues with this plugin, [open an issue in this repository](https://github.com/Tascok/NexoBedrock/issues). Do not contact Nexo or Scaffolding support for NexoBedrock issues; those teams are not responsible for this project.
 - **Upstream projects (reference links only):** [Nexo plugin](https://nexomc.com/products/nexo) · [Scaffolding addon](https://nexomc.com/products/scaffolding) · [Scaffolding documentation and companion extension](https://docs.nexomc.com/addons/scaffolding).
-- **License:** This repository does not currently include a `LICENSE` file. Please clarify the project's license before redistributing it or accepting contributions that may have licensing requirements.
+- **License:** This project is licensed under the [MIT License](LICENSE). You may use, copy, modify, merge, publish, distribute, sublicense, and sell copies of the software, provided that the copyright and permission notice are included in all copies or substantial portions of the software.
 
 The Nexo and Scaffolding names and trademarks belong to their respective owners.
 
@@ -357,6 +358,6 @@ As saídas do smoke test ficam em `build/`, sem alterar o pack de origem.
 - **Projeto independente:** O NexoBedrock é desenvolvido de forma independente e sem objetivo de lucro. Nenhum código-fonte original do plugin Nexo, do Scaffolding ou do ScaffoldingExtension foi copiado ou utilizado. Este projeto não é afiliado, endossado nem um produto oficial de seus desenvolvedores.
 - **Suporte ao NexoBedrock:** Para bugs, dúvidas de instalação ou outros problemas com este plugin, [abra uma issue neste repositório](https://github.com/Tascok/NexoBedrock/issues). Não procure o suporte do Nexo ou do Scaffolding para problemas do NexoBedrock; as equipes deles não são responsáveis por este projeto.
 - **Projetos upstream (links apenas para referência):** [Plugin Nexo](https://nexomc.com/products/nexo) · [Addon Scaffolding](https://nexomc.com/products/scaffolding) · [Documentação do Scaffolding e extensão complementar](https://docs.nexomc.com/addons/scaffolding).
-- **Licença:** Este repositório ainda não contém um arquivo `LICENSE`. Defina a licença do projeto antes de redistribuí-lo ou aceitar contribuições que possam ter requisitos de licenciamento.
+- **Licença:** Este projeto está sob a [licença MIT](LICENSE). Você pode usar, copiar, modificar, mesclar, publicar, distribuir, sublicenciar e vender cópias do software, desde que mantenha o aviso de copyright e a licença em todas as cópias ou partes substanciais do software.
 
 Os nomes e marcas Nexo e Scaffolding pertencem aos seus respectivos proprietários.
