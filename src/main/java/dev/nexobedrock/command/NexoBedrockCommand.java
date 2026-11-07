@@ -100,6 +100,10 @@ public final class NexoBedrockCommand implements CommandExecutor, TabCompleter {
                 + " §7| 2D/3D: §f" + config.include2d() + "/" + config.include3d());
         sender.sendMessage("§7- Packs: §f" + config.geyserPacksFolder());
         sender.sendMessage("§7- Mappings: §f" + config.geyserMappingsFolder());
+        if (plugin.getHologramBridge() != null) {
+            sender.sendMessage("§7- FancyHolograms Bedrock: §f"
+                    + (plugin.getHologramBridge().isEnabled() ? "ativo" : "desativado"));
+        }
         if (last == null) {
             sender.sendMessage("§7- Ultima conversao: §fnunca");
             return;

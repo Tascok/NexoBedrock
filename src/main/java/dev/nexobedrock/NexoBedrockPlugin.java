@@ -5,7 +5,8 @@ import dev.nexobedrock.config.PluginConfig;
 import dev.nexobedrock.config.BedrockTextMode;
 import dev.nexobedrock.conversion.ConversionService;
 import dev.nexobedrock.listener.NexoPackListener;
-import dev.nexobedrock.listener.BedrockHologramPacketListener;
+import dev.nexobedrock.listener.BedrockItemNamePacketListener;
+import dev.nexobedrock.hologram.FancyHologramBedrockBridge;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -14,6 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class NexoBedrockPlugin extends JavaPlugin {
     private final AtomicReference<PluginConfig> config = new AtomicReference<>();
     private ConversionService conversionService;
+    private FancyHologramBedrockBridge hologramBridge;
 
     @Override
     public void onEnable() {
@@ -47,11 +49,21 @@ public final class NexoBedrockPlugin extends JavaPlugin {
                 && config.get().bedrockTextMode() == BedrockTextMode.LEGACY
                 && getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
             String prefix = getConfig().getString("holograms.bedrock-name-prefix", ".");
-            new BedrockHologramPacketListener(this, prefix).register();
-            getLogger().info("Hologramas RGB por pacote ativos para jogadores com prefixo Floodgate '"
+            new BedrockItemNamePacketListener(this, prefix).register();
+            getLogger().info("Nomes RGB dos itens por pacote ativos para jogadores com prefixo Floodgate '"
                     + prefix + "'.");
         } else if (!getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
-            getLogger().warning("ProtocolLib nao encontrado; hologramas RGB por jogador Bedrock desativados.");
+            getLogger().warning("ProtocolLib nao encontrado; reescrita RGB dos nomes de itens desativada.");
+        }
+
+        if (getServer().getPluginManager().isPluginEnabled("FancyHolograms")) {
+            hologramBridge = new FancyHologramBedrockBridge(this,
+                    getConfig().getString("holograms.bedrock-name-prefix", "."));
+            hologramBridge.start(getConfig().getBoolean("holograms.enabled", false));
+            getLogger().info("Integração Bedrock/FancyHolograms: "
+                    + (hologramBridge.isEnabled() ? "ativa" : "desativada") + ".");
+        } else if (getConfig().getBoolean("holograms.enabled", false)) {
+            getLogger().warning("holograms.enabled está ativo, mas FancyHolograms não foi encontrado.");
         }
 
         getLogger().info("NexoBedrock habilitado. Modo de mapping: "
@@ -60,6 +72,10 @@ public final class NexoBedrockPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (hologramBridge != null) {
+            hologramBridge.close();
+            hologramBridge = null;
+        }
         if (conversionService != null) {
             conversionService.close();
         }
@@ -68,6 +84,9 @@ public final class NexoBedrockPlugin extends JavaPlugin {
     public void reloadPluginConfig() {
         reloadConfig();
         config.set(PluginConfig.from(getConfig()));
+        if (hologramBridge != null) {
+            hologramBridge.setEnabled(getConfig().getBoolean("holograms.enabled", false));
+        }
     }
 
     public PluginConfig getPluginConfig() {
@@ -81,5 +100,9 @@ public final class NexoBedrockPlugin extends JavaPlugin {
 
     public ConversionService getConversionService() {
         return conversionService;
+    }
+
+    public FancyHologramBedrockBridge getHologramBridge() {
+        return hologramBridge;
     }
 }

@@ -20,6 +20,9 @@ bedrock-text:
 # Identificação de jogadores Floodgate no backend atrás do Velocity.
 # O prefixo deve corresponder a Floodgate-Velocity (padrão: ".").
 holograms:
+  # Renderiza hologramas de texto do FancyHolograms com Armor Stands somente para Bedrock.
+  # Altere e aplique com /nexobedrock reload. Desativado por padrão até validação visual.
+  enabled: false
   bedrock-name-prefix: "."
 
 # Converte automaticamente quando o Nexo termina de gerar o pack.
