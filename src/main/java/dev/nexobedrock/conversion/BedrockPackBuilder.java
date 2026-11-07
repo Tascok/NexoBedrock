@@ -7,6 +7,7 @@ import dev.nexobedrock.bedrock.ManifestWriter;
 import dev.nexobedrock.bedrock.McpackWriter;
 import dev.nexobedrock.bedrock.BedrockPackValidator;
 import dev.nexobedrock.bedrock.GradientGlyphAtlas;
+import dev.nexobedrock.bedrock.ChatGradientGlyphs;
 import dev.nexobedrock.bedrock.TextureStore;
 import dev.nexobedrock.config.PluginConfig;
 import dev.nexobedrock.pack.JavaItemEntry;
@@ -116,6 +117,7 @@ public final class BedrockPackBuilder {
 
         List<String> displayNames = new ArrayList<>(converted.stream()
                 .map(item -> item.entry().displayName()).toList());
+        displayNames.addAll(ChatGradientGlyphs.catalog());
         if (extraGlyphTexts != null) displayNames.addAll(extraGlyphTexts);
         GradientGlyphAtlas.Result glyphAtlas = new GradientGlyphAtlas().build(displayNames);
         for (Map.Entry<String, byte[]> page : glyphAtlas.pages().entrySet()) {

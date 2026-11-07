@@ -6,6 +6,7 @@ import dev.nexobedrock.config.BedrockTextMode;
 import dev.nexobedrock.conversion.ConversionService;
 import dev.nexobedrock.listener.NexoPackListener;
 import dev.nexobedrock.listener.BedrockItemNamePacketListener;
+import dev.nexobedrock.listener.BedrockChatGradientListener;
 import dev.nexobedrock.hologram.FancyHologramBedrockBridge;
 import dev.nexobedrock.bedrock.GlyphTextMap;
 import org.bukkit.command.PluginCommand;
@@ -52,14 +53,17 @@ public final class NexoBedrockPlugin extends JavaPlugin {
         }
 
         if (config.get().bedrockTextFormatting()
-                && config.get().bedrockTextMode() == BedrockTextMode.LEGACY
-                && getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
+                && config.get().bedrockTextMode() == BedrockTextMode.LEGACY) {
             String prefix = getConfig().getString("holograms.bedrock-name-prefix", ".");
-            new BedrockItemNamePacketListener(this, prefix).register();
-            getLogger().info("Substituicao por glyphs dos nomes de itens ativa para prefixo Floodgate '"
+            getServer().getPluginManager().registerEvents(
+                    new BedrockChatGradientListener(this, prefix), this);
+            if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
+                new BedrockItemNamePacketListener(this, prefix).register();
+            } else {
+                getLogger().warning("ProtocolLib ausente; reescrita RGB dos nomes de itens desativada.");
+            }
+            getLogger().info("Reescrita de chat RGB por glyphs ativa para prefixo Floodgate '"
                     + prefix + "'.");
-        } else if (!getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
-            getLogger().warning("ProtocolLib nao encontrado; reescrita RGB dos nomes de itens desativada.");
         }
 
         if (getServer().getPluginManager().isPluginEnabled("FancyHolograms")) {
