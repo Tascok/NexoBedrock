@@ -7,6 +7,7 @@
 - Crie um commit com mensagem curta e descritiva, em português ou inglês conforme o contexto do projeto, e publique-o com `git push origin main`.
 - Não faça push forçado, não altere o histórico remoto e não publique se os testes relevantes falharem. Informe o bloqueio ao usuário.
 - Se o push falhar por conflito, divergência ou falta de autorização, não reescreva o histórico nem troque de remoto/branch sem autorização; explique o problema.
+- Após publicar uma alteração de código, teste ou configuração, implante o JAR validado no servidor Nexo configurado quando ele estiver acessível: preserve o JAR anterior como backup, instale o novo, reinicie o servidor e confirme nos logs que a versão esperada iniciou. Se o Geyser estiver em outro servidor/proxy, publique também os arquivos gerados nas pastas configuradas, preserve backups e reinicie/recarregue o Geyser; informe qualquer etapa que não puder ser concluída.
 - Não crie commits vazios. Para solicitações exclusivamente de análise/conversa, não faça commit.
 
 ## Proteção de dados
