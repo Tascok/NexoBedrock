@@ -63,7 +63,7 @@ class BedrockGlyphConverterTest {
     }
 
     @Test
-    void reservesWholePagesUsedByExistingBitmapAndSpaceCharacters() throws Exception {
+    void preservesUniquePrivateUseGlyphsAndReservesSpacePages() throws Exception {
         JsonObject font = Json.parseObject("""
                 {"providers":[
                   {"type":"bitmap","file":"minecraft:small.png","chars":["\\uE201"]},
@@ -77,11 +77,26 @@ class BedrockGlyphConverterTest {
                 "minecraft:large", dev.nexobedrock.TestFixtures.png(16, 16, 0xFFFFFFFF)),
                 java.util.Set.of(), List.of(), 0);
         var result = new BedrockGlyphConverter().convert(pack);
-        assertTrue(result.codepoints().values().stream()
-                .allMatch(cp -> (cp >> 8) != 0xE2 && (cp >> 8) != 0xE3));
+        assertEquals(0xE201, result.codepoints().get("minecraft:default:E201"));
+        assertTrue(result.codepoints().values().stream().noneMatch(cp -> (cp >> 8) == 0xE3));
         assertEquals(result.codepoints().size(),
                 new java.util.HashSet<>(result.codepoints().values()).size());
-        assertTrue(!result.pages().containsKey("font/glyph_E2.png"));
+        assertTrue(result.pages().containsKey("font/glyph_E2.png"));
         assertTrue(!result.pages().containsKey("font/glyph_E3.png"));
+    }
+
+    @Test
+    void sharedPrivateUseCharactersAreRemappedRatherThanOverwritten() throws Exception {
+        JsonObject font = Json.parseObject("""
+                {"providers":[{"type":"bitmap","file":"minecraft:icon.png","chars":["\\uE801"]}]}
+                """);
+        JavaPack pack = new JavaPack("test", "hash", Map.of(), Map.of(),
+                Map.of("minecraft:default", font, "other:default", font),
+                Map.of("minecraft:icon", dev.nexobedrock.TestFixtures.png(8, 8, 0xFFFFFFFF)),
+                java.util.Set.of(), List.of(), 0);
+        var result = new BedrockGlyphConverter().convert(pack);
+        assertTrue(!result.pages().containsKey("font/glyph_E8.png"));
+        assertTrue(!result.codepoints().get("minecraft:default:E801")
+                .equals(result.codepoints().get("other:default:E801")));
     }
 }

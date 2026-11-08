@@ -78,7 +78,22 @@ public final class BedrockGlyphConverter {
         }
 
         Map<Dimensions, List<Glyph>> bySize = new LinkedHashMap<>();
+        Map<Integer, List<Glyph>> directPages = new LinkedHashMap<>();
+        Map<Integer, Long> sourcesPerCharacter = bySource.values().stream().collect(
+                java.util.stream.Collectors.groupingBy(Glyph::sourceCodepoint,
+                        java.util.stream.Collectors.counting()));
+        Set<Integer> spacePages = sourceSpacePages(pack);
+        sourcesPerCharacter.forEach((source, count) -> {
+            if (count > 1) spacePages.add(source >> 8);
+        });
         for (Glyph glyph : bySource.values()) {
+            int source = glyph.sourceCodepoint();
+            if (source >= FIRST_SAFE_CODEPOINT && source < 0xF900
+                    && sourcesPerCharacter.get(source) == 1
+                    && !spacePages.contains(source >> 8)) {
+                directPages.computeIfAbsent(source >> 8, ignored -> new ArrayList<>()).add(glyph);
+                continue;
+            }
             Dimensions dimensions = new Dimensions(
                     Math.min(MAX_CELL_SIZE, glyph.image().getWidth()),
                     Math.min(MAX_CELL_SIZE, glyph.image().getHeight()));
@@ -87,6 +102,28 @@ public final class BedrockGlyphConverter {
 
         Map<String, byte[]> output = new LinkedHashMap<>();
         Map<String, Integer> codepoints = new LinkedHashMap<>();
+        for (Map.Entry<Integer, List<Glyph>> entry : directPages.entrySet()) {
+            int maxSize = entry.getValue().stream().mapToInt(glyph -> Math.max(
+                    Math.min(MAX_CELL_SIZE, glyph.image().getWidth()),
+                    Math.min(MAX_CELL_SIZE, glyph.image().getHeight()))).max().orElseThrow();
+            Page page = new Page(maxSize, maxSize);
+            for (Glyph glyph : entry.getValue()) {
+                int target = glyph.sourceCodepoint();
+                int cell = target & 0xff;
+                int width = Math.min(MAX_CELL_SIZE, glyph.image().getWidth());
+                int height = Math.min(MAX_CELL_SIZE, glyph.image().getHeight());
+                int x = (cell % 16) * maxSize + (maxSize - width) / 2;
+                int y = (cell / 16) * maxSize + (maxSize - height) / 2;
+                Graphics2D graphics = page.image.createGraphics();
+                graphics.setComposite(java.awt.AlphaComposite.Src);
+                graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                        RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+                graphics.drawImage(glyph.image(), x, y, width, height, null);
+                graphics.dispose();
+                codepoints.put(glyph.font() + ":" + String.format("%04X", target), target);
+            }
+            output.put(String.format("font/glyph_%02X.png", entry.getKey()), png(page.image));
+        }
         Set<Integer> reservedPages = sourceFontPages(pack);
         int pageIndex = 0;
         for (Map.Entry<Dimensions, List<Glyph>> group : bySize.entrySet()) {
@@ -135,6 +172,24 @@ public final class BedrockGlyphConverter {
                     + "as métricas Java de ascent/avanço não são reproduzidas exatamente.");
         }
         return new Result(output, codepoints, warnings);
+    }
+
+    private Set<Integer> sourceSpacePages(JavaPack pack) {
+        Set<Integer> result = new HashSet<>();
+        for (JsonObject font : pack.fonts().values()) {
+            JsonArray providers = font.getAsJsonArray("providers");
+            if (providers == null) continue;
+            for (JsonElement entry : providers) {
+                if (!entry.isJsonObject()) continue;
+                JsonObject advances = entry.getAsJsonObject().getAsJsonObject("advances");
+                if (advances != null) {
+                    for (String key : advances.keySet()) {
+                        key.codePoints().forEach(cp -> result.add(cp >> 8));
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     /** Reserve entire pages: a glyph page replaces every character on that page. */

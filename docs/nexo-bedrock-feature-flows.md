@@ -33,8 +33,9 @@ depois de gerar os arquivos necessários e validar o comportamento em Bedrock.
   são reproduzidos precisamente. Para Geyser remoto, o pack precisa estar
   acessível no caminho configurado no Paper; sincronização automática da tabela
   para a extensão Geyser ainda não foi implementada.
-- A alocação usa codepoints exclusivos entre os glyphs convertidos e reserva
-  páginas inteiras já utilizadas por `chars` ou `space` nas fontes Java lidas.
+- A alocação mantém diretamente caracteres privados únicos E200–F8FF em páginas
+  Bedrock e remapeia os demais sem repetir destinos. Páginas com caracteres
+  compartilhados entre fontes ou `space` são reservadas contra esse uso direto.
   Se não houver páginas suficientes, a conversão falha sem publicar um pack
   com colisões. Caracteres de outros plugins ou packs não analisados não podem
   ser garantidos livres; a reserva cobre somente fontes presentes na entrada.
