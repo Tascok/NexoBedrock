@@ -46,7 +46,7 @@ class SyncIntegrationTest {
         createPack(pack);
         byte[] mapping = "{\"format_version\":2,\"items\":{}}".getBytes(StandardCharsets.UTF_8);
         Path bundle = temporary.resolve("latest.zip");
-        new SyncBundleWriter().write(pack, mapping, bundle);
+        new SyncBundleWriter().write(pack, "{\"format_version\":2,\"items\":{\"old\":[]}}".getBytes(StandardCharsets.UTF_8), bundle);
         try (SyncHttpsServer server = new SyncHttpsServer(new InetSocketAddress("127.0.0.1", 0), keyStore,
                 password.toCharArray(), token, bundle)) {
             server.start();
@@ -55,6 +55,8 @@ class SyncIntegrationTest {
                     .send(HttpRequest.newBuilder(uri).GET().build(), HttpResponse.BodyHandlers.discarding()));
             assertEquals(401, http.send(HttpRequest.newBuilder(uri).GET().build(), HttpResponse.BodyHandlers.discarding()).statusCode());
             assertEquals(401, http.send(HttpRequest.newBuilder(uri).header("Authorization", "Bearer wrong").GET().build(), HttpResponse.BodyHandlers.discarding()).statusCode());
+            assertEquals(503, http.send(HttpRequest.newBuilder(uri).header("Authorization", "Bearer " + token).GET().build(), HttpResponse.BodyHandlers.discarding()).statusCode(),
+                    "an old bundle must not be served before the current conversion finishes");
             assertEquals(405, http.send(HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.discarding()).statusCode());
             assertEquals(404, http.send(HttpRequest.newBuilder(URI.create(uri + "?token=secret")).GET().build(), HttpResponse.BodyHandlers.discarding()).statusCode());
             Properties properties = new Properties(); properties.setProperty("url", uri.toString());
@@ -66,16 +68,42 @@ class SyncIntegrationTest {
             Files.writeString(extension.resolve("ca.pem"), "-----BEGIN CERTIFICATE-----\n" + cert + "\n-----END CERTIFICATE-----\n");
             properties.setProperty("token-file", "token.txt");
             properties.setProperty("ca-certificate", "ca.pem");
-            try (SyncPuller puller = new SyncPuller(extension, properties, ignored -> {})) {
-                puller.fetch();
+            properties.setProperty("startup-wait-seconds", "10");
+            var waiting = new java.util.concurrent.CountDownLatch(1);
+            var failure = new java.util.concurrent.atomic.AtomicReference<Throwable>();
+            Thread writer = new Thread(() -> {
+                try {
+                    if (!waiting.await(10, java.util.concurrent.TimeUnit.SECONDS)) throw new IllegalStateException("retry not observed");
+                    new SyncBundleWriter().write(pack, mapping, bundle);
+                    server.markReady();
+                } catch (Throwable exception) { failure.set(exception); }
+            });
+            writer.start();
+            try (SyncPuller puller = new SyncPuller(extension, properties, message -> {
+                if (message.contains("Waiting for")) waiting.countDown();
+            })) {
+                puller.fetchAtStartup();
+                writer.join(10000);
+                assertNull(failure.get());
+                assertEquals(0, waiting.getCount(), "startup should retry after the initial 503");
                 assertFalse(Files.exists(geyser.resolve("packs/nexobedrock.mcpack")));
                 puller.applyAtStartup(geyser);
                 assertArrayEquals(Files.readAllBytes(pack), Files.readAllBytes(geyser.resolve("packs/nexobedrock.mcpack")));
                 assertArrayEquals(mapping, Files.readAllBytes(geyser.resolve("custom_mappings/nexobedrock.json")));
                 assertEquals("1=example:item\n", Files.readString(extension.resolve("furniture-mappings.properties")));
+                server.beginUpdate();
+                assertEquals(503, http.send(HttpRequest.newBuilder(uri).header("Authorization", "Bearer " + token).GET().build(),
+                        HttpResponse.BodyHandlers.discarding()).statusCode(), "ongoing conversions must not serve stale content");
+                server.markReady();
                 Files.writeString(bundle, "corrupt");
                 assertThrows(java.io.IOException.class, puller::fetch);
                 assertArrayEquals(mapping, Files.readAllBytes(geyser.resolve("custom_mappings/nexobedrock.json")));
+            }
+            var logs = new java.util.ArrayList<String>();
+            try (SyncPuller unauthorized = new SyncPuller(extension, properties, logs::add,
+                    "wrong-token-012345678901234567890123456789", http)) {
+                assertThrows(java.io.IOException.class, unauthorized::fetchAtStartup);
+                assertTrue(logs.isEmpty(), "authentication errors must not retry");
             }
         }
     }

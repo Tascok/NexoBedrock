@@ -32,13 +32,13 @@ public final class NexoBedrockExtension implements org.geysermc.geyser.api.exten
             if (Files.notExists(syncConfig)) {
                 Files.writeString(syncConfig, "# HTTPS only; token must be supplied via the named environment variable.\n"
                         + "enabled=false\nurl=https://example.invalid:8443/v1/bundle\n"
-                        + "token-env=NEXOBEDROCK_SYNC_TOKEN\ntoken-file=\nca-certificate=\ninterval-seconds=60\n");
+                        + "token-env=NEXOBEDROCK_SYNC_TOKEN\ntoken-file=\nca-certificate=\ninterval-seconds=60\nstartup-wait-seconds=90\n");
             }
             java.util.Properties properties = new java.util.Properties();
             try (InputStream input = Files.newInputStream(syncConfig)) { properties.load(input); }
             if (Boolean.parseBoolean(properties.getProperty("enabled", "false"))) {
                 syncPuller = new SyncPuller(dataFolder(), properties, message -> logger().info(message));
-                try { syncPuller.fetch(); }
+                try { syncPuller.fetchAtStartup(); }
                 catch (InterruptedException exception) { Thread.currentThread().interrupt(); }
                 catch (IOException exception) { logger().warning("Proxy sync unavailable at startup; using last verified bundle."); }
                 syncPuller.applyAtStartup(geyserApi().configDirectory());

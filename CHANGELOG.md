@@ -1,5 +1,9 @@
 # Dev log — NexoBedrock
 
+## v0.1.33
+
+- A extensão aguarda temporariamente o endpoint do Paper na inicialização, evitando carregar um pack antigo quando o proxy inicia primeiro. O tempo é configurável e, caso o Paper continue inacessível, usa-se a última geração validada.
+
 ## v0.1.32
 
 - Sincronização opcional de gerações completas entre Paper e extensões Geyser por HTTPS autenticado.

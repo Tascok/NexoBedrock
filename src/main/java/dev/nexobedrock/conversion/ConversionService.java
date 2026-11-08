@@ -113,6 +113,8 @@ public final class ConversionService {
             return;
         }
 
+        if (plugin instanceof dev.nexobedrock.NexoBedrockPlugin nexoBedrock) nexoBedrock.syncUpdateStarted();
+
         NexoItemIndex nexoIndex;
         try {
             nexoIndex = NexoItemIndex.capture(configSupplier.get());
@@ -443,6 +445,7 @@ public final class ConversionService {
         if (!plugin.getConfig().getBoolean("proxy-sync.enabled", false)) return;
         new dev.nexobedrock.sync.SyncBundleWriter().write(pack, mappings,
                 plugin.getDataFolder().toPath().resolve("sync/latest.zip"));
+        if (plugin instanceof dev.nexobedrock.NexoBedrockPlugin nexoBedrock) nexoBedrock.syncUpdatePublished();
     }
 
     private Report report(PluginConfig config, ConversionRequest request, String source,

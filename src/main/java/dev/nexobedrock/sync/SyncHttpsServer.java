@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 public final class SyncHttpsServer implements AutoCloseable {
     private final HttpsServer server;
     private final ExecutorService executor;
+    private final java.util.concurrent.atomic.AtomicBoolean ready = new java.util.concurrent.atomic.AtomicBoolean();
 
     public SyncHttpsServer(InetSocketAddress bind, Path keyStorePath, char[] password,
                            String token, Path bundle) throws Exception {
@@ -53,7 +54,7 @@ public final class SyncHttpsServer implements AutoCloseable {
                     byte[] given = auth == null ? new byte[0] : auth.getBytes(StandardCharsets.UTF_8);
                     if (!MessageDigest.isEqual(expected, given)) {
                         exchange.sendResponseHeaders(401, -1);
-                    } else if (!Files.isRegularFile(bundle)) {
+                    } else if (!ready.get() || !Files.isRegularFile(bundle)) {
                         exchange.sendResponseHeaders(503, -1);
                     } else {
                         try (var channel = java.nio.channels.FileChannel.open(bundle)) {
@@ -72,6 +73,8 @@ public final class SyncHttpsServer implements AutoCloseable {
     }
 
     public void start() { server.start(); }
+    public void beginUpdate() { ready.set(false); }
+    public void markReady() { ready.set(true); }
     public int port() { return server.getAddress().getPort(); }
     @Override public void close() { server.stop(0); executor.shutdownNow(); }
 }

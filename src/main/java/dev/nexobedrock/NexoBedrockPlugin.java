@@ -144,6 +144,14 @@ public final class NexoBedrockPlugin extends JavaPlugin {
         return System.getenv(getConfig().getString("proxy-sync." + name + "-env", fallback));
     }
 
+    public void syncUpdateStarted() {
+        if (syncServer != null) syncServer.beginUpdate();
+    }
+
+    public void syncUpdatePublished() {
+        if (syncServer != null) syncServer.markReady();
+    }
+
     public PluginConfig getPluginConfig() {
         PluginConfig current = config.get();
         if (current == null) {

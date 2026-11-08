@@ -25,7 +25,7 @@ proxy-sync:
 
 O keystore PKCS#12 precisa conter a chave privada e o certificado. Em vez de arquivos de senha e token, deixe os campos `*-file` vazios e use as variáveis indicadas por `keystore-password-env` e `token-env`. Caminhos relativos são resolvidos a partir da raiz do servidor. Proteja os arquivos de segredo com permissões de leitura apenas para o usuário do servidor. A configuração do endpoint é lida no início do plugin: reinicie o Paper após alterá-la.
 
-Após a conversão, o endpoint autenticado `https://HOST:8443/v1/bundle` disponibiliza somente o último pacote completo. Se ainda não houver geração, responde 503. Falhas de configuração do endpoint são registradas sem expor o segredo.
+Após a conversão, o endpoint autenticado `https://HOST:8443/v1/bundle` disponibiliza somente o último pacote completo. Durante a inicialização ou uma conversão, e até que ela termine com sucesso, responde 503 em vez de oferecer uma geração antiga. Se a conversão automática estiver desativada, execute `/nexobedrock convert` para disponibilizar a primeira geração. Falhas de configuração do endpoint são registradas sem expor o segredo.
 
 ## Proxy
 
@@ -37,6 +37,7 @@ url=https://paper.exemplo:8443/v1/bundle
 token-file=sync-token.txt
 ca-certificate=sync-ca.pem
 interval-seconds=60
+startup-wait-seconds=90
 ```
 
 `token-file` e `ca-certificate` são relativos à pasta de dados da extensão; caminhos absolutos também são aceitos. O token precisa ser idêntico ao do Paper. Se usar uma autoridade certificadora já confiável pela JVM, deixe `ca-certificate` vazio. Em vez de `token-file`, deixe-o vazio e use a variável de ambiente nomeada por `token-env`. Reinicie o Geyser após alterar essas opções. Cada proxy precisa da própria extensão e acesso de rede ao Paper.
@@ -44,6 +45,8 @@ interval-seconds=60
 ## Quando uma atualização entra em uso
 
 A extensão baixa a geração durante a inicialização e verifica novamente em intervalos de pelo menos 30 segundos. Downloads recebidos enquanto o Geyser está em execução ficam **pendentes**: não substituem arquivos ativos imediatamente. No próximo reinício completo do Geyser, a extensão valida e instala o pack e ambos os mappings antes do carregamento dos registries. O arquivo `sync-applied.sha256` identifica a geração instalada. Reinício automático não é executado; jogadores Bedrock precisarão reconectar.
+
+Se o proxy iniciar antes do Paper, ele tenta aguardar o endpoint por até `startup-wait-seconds` (padrão 90, máximo 300) antes de carregar o Geyser. Cada tentativa de rede também tem seus próprios limites de tempo, e a transferência de um pack pode prolongar o início. Certificados inválidos e respostas de autenticação incorreta falham sem repetir. Se o prazo esgotar, usa a última geração verificada; quando o Paper voltar, a nova geração será baixada em segundo plano e ficará pendente até outro reinício. Configure `startup-wait-seconds=0` para não aguardar.
 
 Os arquivos anteriores são preservados em diretórios `sync-backup-*` na pasta da extensão. Se uma troca for interrompida após iniciar, o journal `sync-transaction` permite restaurar os arquivos anteriores no próximo início. Não remova o journal durante uma recuperação; verifique os logs antes de permitir jogadores se houver erro. O mecanismo depende do comportamento do sistema de arquivos e não substitui backups externos.
 

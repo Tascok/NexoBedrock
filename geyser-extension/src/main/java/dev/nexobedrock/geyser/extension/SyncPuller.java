@@ -24,6 +24,7 @@ public final class SyncPuller implements AutoCloseable {
     private final URI url;
     private final String token;
     private final long interval;
+    private final long startupWaitSeconds;
     private final Consumer<String> log;
     private final HttpClient client;
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(task -> {
@@ -47,6 +48,8 @@ public final class SyncPuller implements AutoCloseable {
         if (token == null || !token.matches("[A-Za-z0-9_-]{32,256}"))
             throw new IllegalArgumentException("Missing or invalid sync token environment variable");
         interval = Math.max(30, Long.parseLong(settings.getProperty("interval-seconds", "60")));
+        startupWaitSeconds = Math.max(0, Math.min(300,
+                Long.parseLong(settings.getProperty("startup-wait-seconds", "90"))));
     }
 
     public void fetch() throws IOException, InterruptedException {
@@ -57,7 +60,7 @@ public final class SyncPuller implements AutoCloseable {
                     .header("Authorization", "Bearer " + token).GET().build();
             HttpResponse<java.io.InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
             try (var input = response.body()) {
-                if (response.statusCode() != 200) throw new IOException("Sync server returned HTTP " + response.statusCode());
+                if (response.statusCode() != 200) throw new SyncHttpException(response.statusCode());
                 long count = 0;
                 try (var out = Files.newOutputStream(temporary)) {
                     byte[] buffer = new byte[8192]; int n;
@@ -75,6 +78,35 @@ public final class SyncPuller implements AutoCloseable {
             move(temporary, staged);
             log.accept("New synchronized content downloaded and verified; restart Geyser to apply it.");
         } finally { Files.deleteIfExists(temporary); }
+    }
+
+    /** Wait for the source to start before Geyser loads registries, then fall back to the last bundle. */
+    public void fetchAtStartup() throws IOException, InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(startupWaitSeconds);
+        boolean announced = false;
+        while (true) {
+            try {
+                fetch();
+                return;
+            } catch (javax.net.ssl.SSLException exception) {
+                throw exception; // Certificate problems require configuration changes, not retries.
+            } catch (IOException exception) {
+                if (exception instanceof SyncHttpException status
+                        && status.status >= 400 && status.status < 500 && status.status != 429) throw exception;
+                long remaining = deadline - System.nanoTime();
+                if (remaining <= 0) throw exception;
+                if (!announced) {
+                    log.accept("Waiting for the Paper sync endpoint before loading Geyser content.");
+                    announced = true;
+                }
+                TimeUnit.NANOSECONDS.sleep(Math.min(remaining, TimeUnit.SECONDS.toNanos(2)));
+            }
+        }
+    }
+
+    private static final class SyncHttpException extends IOException {
+        private final int status;
+        private SyncHttpException(int status) { super("Sync server returned HTTP " + status); this.status = status; }
     }
 
     public void applyAtStartup(Path geyserDirectory) throws IOException {
