@@ -40,6 +40,8 @@ class ChestGuiOverlayWriterTest {
             var value = ui.getAsJsonObject(panel).getAsJsonArray("modifications").get(0)
                     .getAsJsonObject().getAsJsonObject("value");
             assertTrue(value.has("nexobedrock_gui_overlays@chest.nexobedrock_gui_overlays"));
+            var instance = value.getAsJsonObject("nexobedrock_gui_overlays@chest.nexobedrock_gui_overlays");
+            assertEquals(panel.startsWith("small") ? 27 : 2, instance.getAsJsonArray("offset").get(1).getAsInt());
         }
         assertEquals("$container_title", ui.getAsJsonObject("nexobedrock_gui_image")
                 .get("$nexobedrock_title").getAsString());

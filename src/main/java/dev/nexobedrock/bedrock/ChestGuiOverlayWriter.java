@@ -91,6 +91,9 @@ public final class ChestGuiOverlayWriter {
             if (panel.startsWith("small")) {
                 JsonArray offset = new JsonArray(); offset.add(0); offset.add(27);
                 instance.add("offset", offset);
+            } else {
+                JsonArray offset = new JsonArray(); offset.add(0); offset.add(2);
+                instance.add("offset", offset);
             }
             value.add("nexobedrock_gui_overlays@chest.nexobedrock_gui_overlays", instance);
             modification.add("value", value);
