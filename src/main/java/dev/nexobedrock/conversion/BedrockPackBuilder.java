@@ -6,7 +6,6 @@ import dev.nexobedrock.bedrock.ItemTextureWriter;
 import dev.nexobedrock.bedrock.ManifestWriter;
 import dev.nexobedrock.bedrock.McpackWriter;
 import dev.nexobedrock.bedrock.BedrockPackValidator;
-import dev.nexobedrock.bedrock.GradientGlyphAtlas;
 import dev.nexobedrock.bedrock.TextureStore;
 import dev.nexobedrock.config.PluginConfig;
 import dev.nexobedrock.pack.JavaItemEntry;
@@ -105,12 +104,6 @@ public final class BedrockPackBuilder {
         textures.writeJson("animations/nexobedrock_disable.json",
                 Json.prettyBytes(disableAnimation()));
         textures.writeBytes("pack_icon.png", new IconFactory().packIcon(firstIcon));
-
-        List<String> displayNames = converted.stream().map(item -> item.entry().displayName()).toList();
-        GradientGlyphAtlas.Result glyphAtlas = new GradientGlyphAtlas().build(displayNames);
-        for (Map.Entry<String, byte[]> page : glyphAtlas.pages().entrySet()) {
-            textures.writeBytes(page.getKey(), page.getValue());
-        }
 
         Path mcpack = workDir.resolve(config.packName() + ".mcpack");
         new McpackWriter().zip(packRoot, mcpack);

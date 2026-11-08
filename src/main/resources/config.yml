@@ -13,8 +13,8 @@ enabled: true
 # O plugin não intercepta mensagens/chat de outros plugins.
 bedrock-text:
   enabled: true
-  # legacy preserva estilos RGB, que são gravados como glyphs coloridos no pack Bedrock.
-  # plain remove estilos; também utiliza glyphs para colorir os caracteres.
+  # legacy preserva estilos e aproxima RGB/gradientes às 16 cores Bedrock.
+  # plain remove estilos. Fontes Java customizadas exigem glyphs e um pack Bedrock.
   output: "legacy"
 
 # Identificação de jogadores Floodgate no backend atrás do Velocity.
