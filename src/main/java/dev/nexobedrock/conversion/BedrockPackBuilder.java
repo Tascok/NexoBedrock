@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import dev.nexobedrock.bedrock.IconFactory;
 import dev.nexobedrock.bedrock.BedrockGlyphConverter;
 import dev.nexobedrock.bedrock.ChestGuiOverlayWriter;
+import dev.nexobedrock.bedrock.GuiOffsets;
 import dev.nexobedrock.bedrock.ScoreboardUiWriter;
 import dev.nexobedrock.bedrock.ModelEngineAnimationWriter;
 import dev.nexobedrock.bedrock.ModelEngineGeometryWriter;
@@ -72,8 +73,17 @@ public final class BedrockPackBuilder {
     public BuildResult build(JavaPack pack, List<JavaItemEntry> entries, PluginConfig config,
                              String packHash, String pluginVersion, Path workDir,
                              Map<String, NexoArmorIndex.Armor> armor,
+                              List<ModelEngineAssetReader.Asset> modelEngineAssets,
+                              List<String> modelEngineWarnings) throws IOException {
+        return build(pack, entries, config, packHash, pluginVersion, workDir, armor,
+                modelEngineAssets, modelEngineWarnings, GuiOffsets.defaults());
+    }
+
+    public BuildResult build(JavaPack pack, List<JavaItemEntry> entries, PluginConfig config,
+                             String packHash, String pluginVersion, Path workDir,
+                             Map<String, NexoArmorIndex.Armor> armor,
                              List<ModelEngineAssetReader.Asset> modelEngineAssets,
-                             List<String> modelEngineWarnings) throws IOException {
+                             List<String> modelEngineWarnings, GuiOffsets guiOffsets) throws IOException {
         Path packRoot = workDir.resolve("pack");
         Files.createDirectories(packRoot);
 
@@ -132,7 +142,7 @@ public final class BedrockPackBuilder {
         }
 
         textures.writeJson("manifest.json",
-                Json.prettyBytes(new ManifestWriter().write(packHash, config, pluginVersion)));
+                Json.prettyBytes(new ManifestWriter().write(packHash + ":" + guiOffsets.fingerprint(), config, pluginVersion)));
         textures.writeJson("textures/item_texture.json",
                 Json.prettyBytes(new ItemTextureWriter().write(itemTextures, config.packName())));
         textures.writeJson("animations/nexobedrock_disable.json",
@@ -187,7 +197,7 @@ public final class BedrockPackBuilder {
         writeModelEngineAssets(textures, modelEngineAssets, config.namespace(), warnings);
 
         BedrockGlyphConverter.Result glyphs = new BedrockGlyphConverter().convert(pack);
-        warnings.addAll(new ChestGuiOverlayWriter().write(pack, glyphs.codepoints(), textures).warnings());
+        warnings.addAll(new ChestGuiOverlayWriter().write(pack, glyphs.codepoints(), textures, guiOffsets).warnings());
         new ScoreboardUiWriter().write(textures);
         for (Map.Entry<String, byte[]> page : glyphs.pages().entrySet()) {
             textures.writeBytes(page.getKey(), page.getValue());

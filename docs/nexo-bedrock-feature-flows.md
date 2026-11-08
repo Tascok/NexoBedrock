@@ -240,3 +240,14 @@ Nexo antes de declarar compatibilidade ampla.
 - [Geyser custom blocks](https://geysermc.org/wiki/geyser/custom-blocks)
 - [Geyser custom entities](https://geysermc.org/wiki/geyser/custom-entities)
 - [Geyser custom items](https://geysermc.org/wiki/geyser/custom-items)
+# Ajuste manual dos fundos de GUIs Bedrock
+
+Após uma conversão, `plugins/NexoBedrock/gui-offsets.json` é criado ou ampliado automaticamente com os glyphs de fundo detectados. Cada chave identifica a fonte Java e o código Unicode; `textura` ajuda a localizar o menu. Entradas antigas e valores editados são preservados. Se vários glyphs apontarem para a mesma textura, ajuste a entrada do glyph usado no título do menu.
+
+Edite `x` e `y` com números inteiros: `x` positivo move para a direita, negativo para a esquerda; `y` positivo move para baixo, negativo para cima. Zero mantém a posição automática, incluindo a diferença entre baús pequenos e grandes. Exemplo:
+
+```json
+"minecraft:default:F800": { "textura": "exemplo:gui/menu.png", "x": 0, "y": -2 }
+```
+
+Salve o JSON válido e execute `/nexobedrock convert`. O arquivo é lido a cada conversão; não é necessário reiniciar o Paper. A alteração invalida o cache e altera a identidade do pack para o cliente baixá-lo novamente. Se o Geyser estiver em outro servidor ou proxy, copie o pack e mappings gerados para as pastas configuradas do Geyser e reinicie/recarregue-o; então reconecte o cliente Bedrock. Um JSON inválido interrompe a conversão sem sobrescrever o arquivo ou o pack publicado.

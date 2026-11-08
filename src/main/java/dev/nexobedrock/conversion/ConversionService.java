@@ -250,7 +250,10 @@ public final class ConversionService {
                         report, elapsedMs(started));
             }
 
-            String fingerprint = config.fingerprint();
+            Path guiOffsetsPath = plugin.getDataFolder().toPath().resolve("gui-offsets.json");
+            boolean guiOffsetsExists = Files.exists(guiOffsetsPath);
+            dev.nexobedrock.bedrock.GuiOffsets guiOffsets = dev.nexobedrock.bedrock.GuiOffsets.load(guiOffsetsPath);
+            String fingerprint = config.fingerprint() + guiOffsets.fingerprint();
             // Armor definitions live outside the Java resource pack: changing their
             // layers must invalidate the cached Bedrock pack too.
             String armorFingerprint = Hashing.sha256Hex(
@@ -268,7 +271,7 @@ public final class ConversionService {
             String cacheKey = cache.key(pack.sourceHash(),
                     fingerprint + armorFingerprint + appearanceFingerprint
                             + modelEngineFingerprint, pluginVersion);
-            if (!request.force()) {
+            if (!request.force() && guiOffsetsExists) {
                 PackCache.Entry cached = cache.find(cacheKey);
                 if (cached != null) {
                     return deployCached(config, cached, started);
@@ -284,7 +287,8 @@ public final class ConversionService {
             BedrockPackBuilder.BuildResult built;
             try {
                 built = packBuilder.build(pack, entries, config, pack.sourceHash(),
-                        pluginVersion, workDir, armor, modelEngine.assets(), modelEngine.warnings());
+                        pluginVersion, workDir, armor, modelEngine.assets(), modelEngine.warnings(), guiOffsets);
+                guiOffsets.save();
             } catch (Throwable throwable) {
                 AtomicFiles.deleteTree(workDir);
                 throw throwable;

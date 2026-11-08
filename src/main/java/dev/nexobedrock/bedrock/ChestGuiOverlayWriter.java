@@ -20,6 +20,11 @@ public final class ChestGuiOverlayWriter {
 
     public Result write(JavaPack pack, Map<String, Integer> mappings, TextureStore textures)
             throws IOException {
+        return write(pack, mappings, textures, GuiOffsets.defaults());
+    }
+
+    public Result write(JavaPack pack, Map<String, Integer> mappings, TextureStore textures,
+                        GuiOffsets offsets) throws IOException {
         JsonArray overlays = new JsonArray();
         List<String> tests = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
@@ -55,6 +60,7 @@ public final class ChestGuiOverlayWriter {
                 int width = Math.min(512, Math.max(1,
                         (int) Math.round((double) image.getWidth() * height / image.getHeight())));
                 String character = new String(Character.toChars(target));
+                GuiOffsets.Offset adjustment = offsets.getOrCreate(font.getKey() + ":" + String.format("%04X", source), key);
                 String match = "(not ($nexobedrock_title - '" + character + "' = $nexobedrock_title))";
                 tests.add("(not (($container_title - '" + character + "') = $container_title))");
                 String texture = textures.add(png, "textures/nexobedrock/gui/glyph_"
@@ -64,7 +70,7 @@ public final class ChestGuiOverlayWriter {
                 imageControl.addProperty("visible", match);
                 JsonArray size = new JsonArray(); size.add(width); size.add(height);
                 imageControl.add("size", size);
-                JsonArray offset = new JsonArray(); offset.add(0); offset.add((height - 220) / 2.0 - 2);
+                JsonArray offset = new JsonArray(); offset.add(adjustment.x()); offset.add((height - 220) / 2.0 - 2 + adjustment.y());
                 imageControl.add("offset", offset);
                 JsonObject wrapper = new JsonObject();
                 wrapper.add("nexobedrock_" + Integer.toHexString(target) + "@nexobedrock_gui_image", imageControl);

@@ -53,4 +53,20 @@ class ChestGuiOverlayWriterTest {
         assertEquals(-44.5, overlay.getAsJsonArray("offset").get(1).getAsDouble());
         assertFalse(Files.exists(temporary.resolve("ui/pocket_containers.json")));
     }
+
+    @Test
+    void appliesPerGlyphOffsets() throws Exception {
+        var font = Json.parseObject("{\"providers\":[{\"type\":\"bitmap\",\"file\":\"example:gui.png\",\"height\":135,\"chars\":[\"\\uF800\"]}]}");
+        JavaPack pack = new JavaPack("test", "hash", Map.of(), Map.of(), Map.of("minecraft:default", font),
+                Map.of("example:gui", dev.nexobedrock.TestFixtures.png(176, 135, 0xffffffff)), Set.of(), List.of(), 0);
+        Path config = temporary.resolve("gui-offsets.json");
+        Files.writeString(config, "{\"guis\":{\"minecraft:default:F800\":{\"x\":-3,\"y\":2}}}");
+        new ChestGuiOverlayWriter().write(pack, Map.of("minecraft:default:F800", 0xF800),
+                new TextureStore(temporary), GuiOffsets.load(config));
+        var ui = Json.readObject(temporary.resolve("ui/chest_screen.json"));
+        var offset = ui.getAsJsonObject("nexobedrock_gui_overlays").getAsJsonArray("controls").get(0)
+                .getAsJsonObject().getAsJsonObject("nexobedrock_f800@nexobedrock_gui_image").getAsJsonArray("offset");
+        assertEquals(-3, offset.get(0).getAsInt());
+        assertEquals(-42.5, offset.get(1).getAsDouble());
+    }
 }
