@@ -42,4 +42,17 @@ class GlyphTextRewriterTest {
         assertEquals("\uA410", result.getAsJsonObject().getAsJsonArray("extra")
                 .get(1).getAsJsonObject().get("text").getAsString());
     }
+
+    @Test
+    void rewritesLiteralTextComponentsWithoutChangingTranslationKeys() {
+        var input = JsonParser.parseString("""
+                {"translate":"message.type.text","with":["\\uA410",{"text":"\\uA410"}]}
+                """);
+        var result = new GlyphTextRewriter().rewriteByFont(input,
+                Map.of("minecraft:default:A410", 0xE200)).getAsJsonObject();
+        assertEquals("message.type.text", result.get("translate").getAsString());
+        assertEquals("\uE200", result.getAsJsonArray("with").get(0).getAsString());
+        assertEquals("\uE200", result.getAsJsonArray("with").get(1)
+                .getAsJsonObject().get("text").getAsString());
+    }
 }

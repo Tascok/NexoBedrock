@@ -33,6 +33,13 @@ depois de gerar os arquivos necessários e validar o comportamento em Bedrock.
   são reproduzidos precisamente. Para Geyser remoto, o pack precisa estar
   acessível no caminho configurado no Paper; sincronização automática da tabela
   para a extensão Geyser ainda não foi implementada.
+- Quando a origem é a pasta `assets` e o ZIP configurado está disponível, as
+  fontes geradas e seus PNGs são complementados a partir do ZIP, sem substituir
+  os modelos de itens dos assets. O hash do ZIP também invalida o cache. Se a
+  conversão ocorrer antes de o Nexo terminar de atualizar esse ZIP, ele poderá
+  conter fontes de uma geração anterior; execute nova conversão após a geração.
+  O remapeamento também é aplicado a mensagens de sistema, action bar e títulos
+  enviados em componentes; chat assinado de jogadores não é modificado.
 - O smoke test executado contra o pack real do servidor converteu 99 glyphs para
   16 folhas quadradas e incluiu o mapa de codepoints; nenhum Bedrock client foi
   conectado para validação visual, portanto alinhamento e nitidez ainda precisam

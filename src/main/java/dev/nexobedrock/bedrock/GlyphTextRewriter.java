@@ -42,7 +42,10 @@ public final class GlyphTextRewriter {
     private JsonElement rewriteByFont(JsonElement component, Map<String, Integer> codepoints,
                                       String inheritedFont) {
         if (component == null || component.isJsonNull() || codepoints.isEmpty()) return component;
-        if (component.isJsonArray()) {
+        if (component.isJsonPrimitive() && component.getAsJsonPrimitive().isString()) {
+            return new JsonPrimitive(rewriteStringByFont(component.getAsString(), inheritedFont,
+                    codepoints));
+        } else if (component.isJsonArray()) {
             JsonArray array = component.getAsJsonArray();
             for (int i = 0; i < array.size(); i++) {
                 array.set(i, rewriteByFont(array.get(i), codepoints, inheritedFont));

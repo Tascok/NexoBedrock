@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
-/** Rewrites custom inventory title glyphs only in outgoing packets to Bedrock players. */
+/** Rewrites unsigned text components sent to Bedrock players; signed chat is untouched. */
 public final class BedrockGuiGlyphPacketListener {
     private final NexoBedrockPlugin plugin;
     private final String bedrockNamePrefix;
@@ -37,7 +37,9 @@ public final class BedrockGuiGlyphPacketListener {
 
     public void register() {
         ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(plugin,
-                ListenerPriority.HIGHEST, PacketType.Play.Server.OPEN_WINDOW) {
+                ListenerPriority.HIGHEST, PacketType.Play.Server.OPEN_WINDOW,
+                PacketType.Play.Server.SYSTEM_CHAT, PacketType.Play.Server.SET_ACTION_BAR_TEXT,
+                PacketType.Play.Server.SET_TITLE_TEXT, PacketType.Play.Server.SET_SUBTITLE_TEXT) {
             @Override
             public void onPacketSending(PacketEvent event) {
                 if (!isBedrockPlayer(event.getPlayer().getName())) return;
@@ -54,7 +56,7 @@ public final class BedrockGuiGlyphPacketListener {
                                 WrappedChatComponent.fromJson(rewritten.toString()));
                     } catch (RuntimeException exception) {
                         plugin.getLogger().log(Level.FINE,
-                                "NexoBedrock: GUI title glyph packet left unchanged", exception);
+                                "NexoBedrock: glyph text packet left unchanged", exception);
                     }
                 }
             }

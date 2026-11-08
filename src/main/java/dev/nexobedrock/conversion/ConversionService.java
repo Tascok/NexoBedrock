@@ -190,6 +190,19 @@ public final class ConversionService {
         String sourceLabel = source.kind() + ": " + source.path();
         try {
             JavaPack pack = reader.read(source, config.maxPackSizeMb());
+            if (source.kind() == PackSourceKind.ASSETS_DIRECTORY) {
+                Path generatedZip = PathUtil.resolve(plugin, config.packPath());
+                if (Files.isRegularFile(generatedZip)) {
+                    try {
+                        JavaPack generated = reader.read(new PackSource(PackSourceKind.ZIP,
+                                generatedZip), config.maxPackSizeMb());
+                        pack = pack.withGeneratedFonts(generated);
+                    } catch (IOException exception) {
+                        logger.warning("NexoBedrock: não foi possível ler fontes do pack gerado: "
+                                + exception.getMessage());
+                    }
+                }
+            }
             Path modelEngineBlueprints = PathUtil.resolve(plugin,
                     config.modelEngineBlueprintsFolder());
             Path modelEngineResourcePack = PathUtil.resolve(plugin,

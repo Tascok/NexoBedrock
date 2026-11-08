@@ -62,7 +62,7 @@ public final class NexoBedrockPlugin extends JavaPlugin {
         if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
             new BedrockGuiGlyphPacketListener(this,
                     getConfig().getString("holograms.bedrock-name-prefix", ".")).register();
-            getLogger().info("Reescrita de glyphs de títulos de inventário Bedrock registrada.");
+            getLogger().info("Reescrita de glyphs Bedrock para GUIs e texto de sistema registrada.");
         } else {
             getLogger().warning("ProtocolLib nao encontrado; glyphs de GUI Bedrock nao serao remapeados.");
         }
