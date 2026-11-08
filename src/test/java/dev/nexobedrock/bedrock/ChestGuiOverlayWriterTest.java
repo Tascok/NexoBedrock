@@ -36,14 +36,18 @@ class ChestGuiOverlayWriterTest {
         assertEquals(1, result.count());
         var ui = Json.parseObject(Files.readAllBytes(temporary.resolve("ui/chest_screen.json")));
         assertEquals("chest", ui.get("namespace").getAsString());
-        for (String panel : List.of("small_chest_panel_top_half", "large_chest_panel_top_half")) {
-            var overlay = ui.getAsJsonObject(panel).getAsJsonArray("modifications").get(0)
-                    .getAsJsonObject().getAsJsonArray("value").get(0).getAsJsonObject()
-                    .getAsJsonObject("nexobedrock_f800");
-            assertTrue(overlay.get("visible").getAsString().contains("$container_title"));
-            assertTrue(overlay.get("visible").getAsString().contains("\uF800"));
-            assertEquals(176, overlay.getAsJsonArray("size").get(0).getAsInt());
+        for (String panel : List.of("small_chest_panel", "large_chest_panel")) {
+            var value = ui.getAsJsonObject(panel).getAsJsonArray("modifications").get(0)
+                    .getAsJsonObject().getAsJsonObject("value");
+            assertTrue(value.has("nexobedrock_gui_overlays@chest.nexobedrock_gui_overlays"));
         }
+        assertEquals("$container_title", ui.getAsJsonObject("nexobedrock_gui_image")
+                .get("$nexobedrock_title").getAsString());
+        var overlay = ui.getAsJsonObject("nexobedrock_gui_overlays").getAsJsonArray("controls")
+                .get(0).getAsJsonObject().getAsJsonObject("nexobedrock_f800@nexobedrock_gui_image");
+        assertTrue(overlay.get("visible").getAsString().contains("$nexobedrock_title"));
+        assertTrue(overlay.get("visible").getAsString().contains("\uF800"));
+        assertEquals(176, overlay.getAsJsonArray("size").get(0).getAsInt());
         assertFalse(Files.exists(temporary.resolve("ui/pocket_containers.json")));
     }
 }

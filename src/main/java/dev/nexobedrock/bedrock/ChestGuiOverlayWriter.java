@@ -55,33 +55,45 @@ public final class ChestGuiOverlayWriter {
                 int width = Math.min(512, Math.max(1,
                         (int) Math.round((double) image.getWidth() * height / image.getHeight())));
                 String character = new String(Character.toChars(target));
-                String match = "(not (($container_title - '" + character + "') = $container_title))";
-                tests.add(match);
+                String match = "(not ($nexobedrock_title - '" + character + "' = $nexobedrock_title))";
+                tests.add("(not (($container_title - '" + character + "') = $container_title))");
                 String texture = textures.add(png, "textures/nexobedrock/gui/glyph_"
                         + Integer.toHexString(target));
                 JsonObject imageControl = new JsonObject();
-                imageControl.addProperty("type", "image");
                 imageControl.addProperty("texture", texture);
                 imageControl.addProperty("visible", match);
-                imageControl.addProperty("layer", 13);
-                imageControl.addProperty("anchor_from", "top_left");
-                imageControl.addProperty("anchor_to", "top_left");
                 JsonArray size = new JsonArray(); size.add(width); size.add(height);
                 imageControl.add("size", size);
-                JsonArray offset = new JsonArray(); offset.add(0); offset.add(-11);
+                JsonArray offset = new JsonArray(); offset.add(0); offset.add((height - 220) / 2.0);
                 imageControl.add("offset", offset);
                 JsonObject wrapper = new JsonObject();
-                wrapper.add("nexobedrock_" + Integer.toHexString(target), imageControl);
+                wrapper.add("nexobedrock_" + Integer.toHexString(target) + "@nexobedrock_gui_image", imageControl);
                 overlays.add(wrapper);
             }
         }
         if (overlays.isEmpty()) return new Result(0, List.of());
         JsonObject root = new JsonObject(); root.addProperty("namespace", "chest");
-        for (String panel : List.of("small_chest_panel_top_half", "large_chest_panel_top_half")) {
+        JsonObject imageBase = new JsonObject();
+        imageBase.addProperty("type", "image");
+        imageBase.addProperty("layer", 11);
+        imageBase.addProperty("$nexobedrock_title", "$container_title");
+        root.add("nexobedrock_gui_image", imageBase);
+        JsonObject overlayPanel = new JsonObject();
+        overlayPanel.addProperty("type", "panel");
+        overlayPanel.add("controls", overlays);
+        root.add("nexobedrock_gui_overlays", overlayPanel);
+        for (String panel : List.of("small_chest_panel", "large_chest_panel")) {
             JsonObject modification = new JsonObject();
             modification.addProperty("array_name", "controls");
-            modification.addProperty("operation", "insert_front");
-            modification.add("value", overlays.deepCopy());
+            modification.addProperty("operation", "insert_back");
+            JsonObject value = new JsonObject();
+            JsonObject instance = new JsonObject();
+            if (panel.startsWith("small")) {
+                JsonArray offset = new JsonArray(); offset.add(0); offset.add(27);
+                instance.add("offset", offset);
+            }
+            value.add("nexobedrock_gui_overlays@chest.nexobedrock_gui_overlays", instance);
+            modification.add("value", value);
             JsonArray modifications = new JsonArray(); modifications.add(modification);
             JsonObject panelPatch = new JsonObject(); panelPatch.add("modifications", modifications);
             root.add(panel, panelPatch);
