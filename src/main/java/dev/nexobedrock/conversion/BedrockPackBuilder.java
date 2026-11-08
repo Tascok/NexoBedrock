@@ -3,6 +3,7 @@ package dev.nexobedrock.conversion;
 import com.google.gson.JsonObject;
 import dev.nexobedrock.bedrock.IconFactory;
 import dev.nexobedrock.bedrock.BedrockGlyphConverter;
+import dev.nexobedrock.bedrock.ChestGuiOverlayWriter;
 import dev.nexobedrock.bedrock.ModelEngineAnimationWriter;
 import dev.nexobedrock.bedrock.ModelEngineGeometryWriter;
 import dev.nexobedrock.bedrock.ItemTextureWriter;
@@ -185,6 +186,7 @@ public final class BedrockPackBuilder {
         writeModelEngineAssets(textures, modelEngineAssets, config.namespace(), warnings);
 
         BedrockGlyphConverter.Result glyphs = new BedrockGlyphConverter().convert(pack);
+        warnings.addAll(new ChestGuiOverlayWriter().write(pack, glyphs.codepoints(), textures).warnings());
         for (Map.Entry<String, byte[]> page : glyphs.pages().entrySet()) {
             textures.writeBytes(page.getKey(), page.getValue());
         }

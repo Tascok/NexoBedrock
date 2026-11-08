@@ -6,6 +6,7 @@ import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
+import com.comphenix.protocol.wrappers.WrappedTeamParameters;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import dev.nexobedrock.NexoBedrockPlugin;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
@@ -39,28 +41,51 @@ public final class BedrockGuiGlyphPacketListener {
         ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(plugin,
                 ListenerPriority.HIGHEST, PacketType.Play.Server.OPEN_WINDOW,
                 PacketType.Play.Server.SYSTEM_CHAT, PacketType.Play.Server.SET_ACTION_BAR_TEXT,
-                PacketType.Play.Server.SET_TITLE_TEXT, PacketType.Play.Server.SET_SUBTITLE_TEXT) {
+                PacketType.Play.Server.SET_TITLE_TEXT, PacketType.Play.Server.SET_SUBTITLE_TEXT,
+                PacketType.Play.Server.SCOREBOARD_OBJECTIVE, PacketType.Play.Server.SCOREBOARD_SCORE,
+                PacketType.Play.Server.SCOREBOARD_TEAM) {
             @Override
             public void onPacketSending(PacketEvent event) {
                 if (!isBedrockPlayer(event.getPlayer().getName())) return;
                 Map<String, Integer> mappings = refreshMap();
                 if (mappings.isEmpty()) return;
-                var components = event.getPacket().getChatComponents();
-                for (int index = 0; index < components.size(); index++) {
-                    WrappedChatComponent component = components.readSafely(index);
-                    if (component == null) continue;
-                    try {
-                        JsonElement json = JsonParser.parseString(component.getJson());
-                        JsonElement rewritten = rewriter.rewriteByFont(json, mappings);
-                        components.write(index,
-                                WrappedChatComponent.fromJson(rewritten.toString()));
-                    } catch (RuntimeException exception) {
-                        plugin.getLogger().log(Level.FINE,
-                                "NexoBedrock: glyph text packet left unchanged", exception);
+                try {
+                    if (event.getPacketType() == PacketType.Play.Server.SCOREBOARD_TEAM) {
+                        rewriteTeam(event, mappings);
+                        return;
                     }
+                    var components = event.getPacket().getChatComponents();
+                    for (int index = 0; index < components.size(); index++) {
+                        WrappedChatComponent component = components.readSafely(index);
+                        if (component != null) components.write(index, rewrite(component, mappings));
+                    }
+                } catch (RuntimeException exception) {
+                    plugin.getLogger().log(Level.FINE,
+                            "NexoBedrock: glyph text packet left unchanged", exception);
                 }
             }
         });
+    }
+
+    private void rewriteTeam(PacketEvent event, Map<String, Integer> mappings) {
+        var modifier = event.getPacket().getOptionalTeamParameters();
+        for (int index = 0; index < modifier.size(); index++) {
+            Optional<WrappedTeamParameters> value = modifier.readSafely(index);
+            if (value == null || value.isEmpty()) continue;
+            WrappedTeamParameters team = value.get();
+            WrappedTeamParameters rewritten = WrappedTeamParameters.newBuilder(team)
+                    .displayName(rewrite(team.getDisplayName(), mappings))
+                    .prefix(rewrite(team.getPrefix(), mappings))
+                    .suffix(rewrite(team.getSuffix(), mappings)).build();
+            modifier.write(index, Optional.of(rewritten));
+        }
+    }
+
+    private WrappedChatComponent rewrite(WrappedChatComponent component,
+                                          Map<String, Integer> mappings) {
+        if (component == null) return null;
+        JsonElement json = JsonParser.parseString(component.getJson());
+        return WrappedChatComponent.fromJson(rewriter.rewriteByFont(json, mappings).toString());
     }
 
     private Map<String, Integer> refreshMap() {

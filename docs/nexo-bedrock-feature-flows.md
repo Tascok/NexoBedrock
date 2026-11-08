@@ -159,19 +159,25 @@ como texto com `font` customizada, sem configuração de IDs de menu. Providers
 `bitmap` são migrados dos assets encontrados no pack; não é necessário cadastrar
 cada glyph manualmente.
 
+**Overlay experimental:** glyphs bitmap altos, individuais e resolvidos são
+exportados como imagens para baús clássicos pequenos/grandes. A imagem só fica
+visível quando o título contém o codepoint Bedrock daquele glyph; o título é
+ocultado nesse caso. O detector é baseado nos providers do pack, não em nomes de
+menus. Testes cobrem a estrutura gerada, mas a posição, escala e camadas precisam
+de validação em clientes Bedrock; a interface Pocket não é modificada.
+
 **Ainda não implementado:** não há leitura de configurações Nexo de GUI para
-descobrir backgrounds, slots, posições, ações ou layout. Também não há
+descobrir slots, ações ou layout. Também não há
 substituição global de texturas de tela vanilla/HUD. O conversor não consegue
-inferir de forma segura qual imagem decorativa pertence a qual inventário só
-pela existência de PNGs no pack, e Bedrock não oferece um override genérico para
+inferir qual imagem decorativa pertence a um inventário só pela existência de
+PNGs independentes no pack, e Bedrock não oferece um override genérico para
 telas customizadas enviadas pelo servidor Java. Esses layouts precisam de uma
 integração/runtime de GUI específico; screens hardcoded do cliente Bedrock
 continuam fora do alcance de um resource pack genérico.
 
 O fundo em título Java não pode simplesmente ser exibido como caractere no
-Bedrock: para aproximar a tela é necessário produzir um overlay JSON-UI no
-container, condicionado ao título, e considerar a versão e o modo de interface
-do cliente. O remapeamento de Unicode sozinho não implementa esse overlay.
+Bedrock. O overlay gerado cobre baús clássicos apenas; outros tipos de tela e
+clientes Pocket requerem layouts e pontos de injeção específicos.
 
 **Limites confirmados:** glyphs Bedrock são desenhados no tamanho baked, então
 escala e nitidez estão ligadas; alguns casos exigem escala/altura/supersampling.
