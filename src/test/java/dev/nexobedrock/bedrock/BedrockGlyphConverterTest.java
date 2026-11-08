@@ -61,4 +61,27 @@ class BedrockGlyphConverterTest {
             assertEquals(page.getWidth(), page.getHeight());
         }
     }
+
+    @Test
+    void reservesWholePagesUsedByExistingBitmapAndSpaceCharacters() throws Exception {
+        JsonObject font = Json.parseObject("""
+                {"providers":[
+                  {"type":"bitmap","file":"minecraft:small.png","chars":["\\uE201"]},
+                  {"type":"space","advances":{"\\uE301":-1}},
+                  {"type":"bitmap","file":"minecraft:large.png","chars":["A"]}
+                ]}
+                """);
+        JavaPack pack = new JavaPack("test", "hash", Map.of(), Map.of(),
+                Map.of("minecraft:default", font), Map.of(
+                "minecraft:small", dev.nexobedrock.TestFixtures.png(8, 8, 0xFFFFFFFF),
+                "minecraft:large", dev.nexobedrock.TestFixtures.png(16, 16, 0xFFFFFFFF)),
+                java.util.Set.of(), List.of(), 0);
+        var result = new BedrockGlyphConverter().convert(pack);
+        assertTrue(result.codepoints().values().stream()
+                .allMatch(cp -> (cp >> 8) != 0xE2 && (cp >> 8) != 0xE3));
+        assertEquals(result.codepoints().size(),
+                new java.util.HashSet<>(result.codepoints().values()).size());
+        assertTrue(!result.pages().containsKey("font/glyph_E2.png"));
+        assertTrue(!result.pages().containsKey("font/glyph_E3.png"));
+    }
 }

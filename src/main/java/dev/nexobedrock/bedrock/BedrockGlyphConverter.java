@@ -19,6 +19,8 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 /** Converts Java bitmap font providers into Bedrock's 16x16 Unicode glyph pages. */
 public final class BedrockGlyphConverter {
@@ -85,14 +87,18 @@ public final class BedrockGlyphConverter {
 
         Map<String, byte[]> output = new LinkedHashMap<>();
         Map<String, Integer> codepoints = new LinkedHashMap<>();
+        Set<Integer> reservedPages = sourceFontPages(pack);
         int pageIndex = 0;
         for (Map.Entry<Dimensions, List<Glyph>> group : bySize.entrySet()) {
             List<Glyph> groupGlyphs = group.getValue();
             for (int start = 0; start < groupGlyphs.size(); start += 256) {
+                while (pageIndex < SAFE_PAGE_COUNT
+                        && reservedPages.contains((FIRST_SAFE_CODEPOINT >> 8) + pageIndex)) {
+                    pageIndex++;
+                }
                 if (pageIndex >= SAFE_PAGE_COUNT) {
-                    warnings.add("Limite de páginas Bedrock E2-F8 atingido; "
-                            + (groupGlyphs.size() - start) + " glyph(s) ignorado(s)");
-                    break;
+                    throw new IllegalStateException("Sem páginas Unicode livres suficientes para "
+                            + "converter glyphs sem colisões com os caracteres do pack.");
                 }
                 Dimensions dimensions = group.getKey();
                 Page page = new Page(dimensions.width(), dimensions.height());
@@ -129,6 +135,35 @@ public final class BedrockGlyphConverter {
                     + "as métricas Java de ascent/avanço não são reproduzidas exatamente.");
         }
         return new Result(output, codepoints, warnings);
+    }
+
+    /** Reserve entire pages: a glyph page replaces every character on that page. */
+    private Set<Integer> sourceFontPages(JavaPack pack) {
+        Set<Integer> pages = new HashSet<>();
+        for (JsonObject font : pack.fonts().values()) {
+            JsonArray providers = font.getAsJsonArray("providers");
+            if (providers == null) continue;
+            for (JsonElement entry : providers) {
+                if (!entry.isJsonObject()) continue;
+                JsonObject provider = entry.getAsJsonObject();
+                JsonArray rows = provider.getAsJsonArray("chars");
+                if (rows != null) {
+                    for (JsonElement row : rows) {
+                        if (row.isJsonPrimitive() && row.getAsJsonPrimitive().isString()) {
+                            row.getAsString().codePoints().filter(cp -> cp != 0)
+                                    .forEach(cp -> pages.add(cp >> 8));
+                        }
+                    }
+                }
+                JsonObject advances = provider.getAsJsonObject("advances");
+                if (advances != null) {
+                    for (String key : advances.keySet()) {
+                        key.codePoints().forEach(cp -> pages.add(cp >> 8));
+                    }
+                }
+            }
+        }
+        return pages;
     }
 
     private List<Glyph> readGlyphs(JavaPack pack, List<String> warnings) {
