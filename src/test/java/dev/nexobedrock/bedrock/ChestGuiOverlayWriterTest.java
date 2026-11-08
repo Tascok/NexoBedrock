@@ -48,6 +48,7 @@ class ChestGuiOverlayWriterTest {
         assertTrue(overlay.get("visible").getAsString().contains("$nexobedrock_title"));
         assertTrue(overlay.get("visible").getAsString().contains("\uF800"));
         assertEquals(176, overlay.getAsJsonArray("size").get(0).getAsInt());
+        assertEquals(-44.5, overlay.getAsJsonArray("offset").get(1).getAsDouble());
         assertFalse(Files.exists(temporary.resolve("ui/pocket_containers.json")));
     }
 }

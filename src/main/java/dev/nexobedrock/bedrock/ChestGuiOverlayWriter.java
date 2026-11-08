@@ -64,7 +64,7 @@ public final class ChestGuiOverlayWriter {
                 imageControl.addProperty("visible", match);
                 JsonArray size = new JsonArray(); size.add(width); size.add(height);
                 imageControl.add("size", size);
-                JsonArray offset = new JsonArray(); offset.add(0); offset.add((height - 220) / 2.0);
+                JsonArray offset = new JsonArray(); offset.add(0); offset.add((height - 220) / 2.0 - 2);
                 imageControl.add("offset", offset);
                 JsonObject wrapper = new JsonObject();
                 wrapper.add("nexobedrock_" + Integer.toHexString(target) + "@nexobedrock_gui_image", imageControl);
