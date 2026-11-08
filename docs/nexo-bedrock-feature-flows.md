@@ -244,6 +244,8 @@ Nexo antes de declarar compatibilidade ampla.
 
 Após uma conversão, `plugins/NexoBedrock/gui-offsets.json` é criado ou ampliado automaticamente com os glyphs de fundo detectados. Cada chave identifica a fonte Java e o código Unicode; `caractere` permite procurar o glyph no título do menu e `textura` mostra a referência no pack (que pode ser um identificador gerado). Entradas antigas e valores editados são preservados. Se vários glyphs apontarem para a mesma textura, ajuste a entrada do glyph usado no título do menu.
 
+Quando o Nexo fornece uma definição correspondente em `plugins/Nexo/glyphs/`, `nomes_gui_nexo` mostra os caminhos originais das texturas (por exemplo `ranks/tags`) e `glyphs_nexo` lista os nomes dos glyphs. Se houver mais de uma definição para o mesmo caractere e fonte, todas são listadas; os ajustes continuam associados ao caractere e à fonte, não ao nome da textura. Sem correspondência, esses campos não são gerados.
+
 Edite `x` e `y` com números inteiros: `x` positivo move para a direita, negativo para a esquerda; `y` positivo move para baixo, negativo para cima. Zero mantém a posição automática, incluindo a diferença entre baús pequenos e grandes. Exemplo:
 
 ```json

@@ -4,11 +4,15 @@ import com.google.gson.JsonObject;
 import dev.nexobedrock.util.AtomicFiles;
 import dev.nexobedrock.util.Hashing;
 import dev.nexobedrock.util.Json;
+import dev.nexobedrock.pack.NexoGlyphNames;
+import com.google.gson.JsonArray;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /** Persistent, per-source-glyph adjustments, in Bedrock UI pixels. */
 public final class GuiOffsets {
@@ -18,6 +22,7 @@ public final class GuiOffsets {
     private final JsonObject root;
     private final JsonObject entries;
     private boolean changed;
+    private Map<String, List<NexoGlyphNames.Glyph>> glyphNames = Map.of();
 
     private GuiOffsets(Path path, byte[] original, JsonObject root) throws IOException {
         this.path = path;
@@ -62,7 +67,25 @@ public final class GuiOffsets {
             entries.getAsJsonObject(id).addProperty("caractere", character);
             changed = true;
         }
+        updateName(id);
         return read(id);
+    }
+
+    public void setGlyphNames(Map<String, List<NexoGlyphNames.Glyph>> names) {
+        glyphNames = Map.copyOf(names);
+        for (String id : entries.keySet()) updateName(id);
+    }
+
+    private void updateName(String id) {
+        List<NexoGlyphNames.Glyph> matches = glyphNames.get(id);
+        if (matches == null || matches.isEmpty() || !entries.get(id).isJsonObject()) return;
+        JsonObject entry = entries.getAsJsonObject(id);
+        JsonArray names = new JsonArray();
+        JsonArray textures = new JsonArray();
+        matches.stream().map(NexoGlyphNames.Glyph::name).distinct().sorted().forEach(names::add);
+        matches.stream().map(NexoGlyphNames.Glyph::texture).distinct().sorted().forEach(textures::add);
+        if (!names.equals(entry.get("glyphs_nexo"))) { entry.add("glyphs_nexo", names); changed = true; }
+        if (!textures.equals(entry.get("nomes_gui_nexo"))) { entry.add("nomes_gui_nexo", textures); changed = true; }
     }
 
     private Offset read(String id) throws IOException {

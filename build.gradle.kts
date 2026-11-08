@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "dev.nexobedrock"
-version = "0.1.30"
+version = "0.1.31"
 
 val paperVersion = "1.21.10-R0.1-SNAPSHOT"
 val nexoVersion = "1.29.1"

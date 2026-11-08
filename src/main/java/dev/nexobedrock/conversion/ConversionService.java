@@ -253,6 +253,8 @@ public final class ConversionService {
             Path guiOffsetsPath = plugin.getDataFolder().toPath().resolve("gui-offsets.json");
             boolean guiOffsetsExists = Files.exists(guiOffsetsPath);
             dev.nexobedrock.bedrock.GuiOffsets guiOffsets = dev.nexobedrock.bedrock.GuiOffsets.load(guiOffsetsPath);
+            Path nexoGlyphs = nexoItems.getParent().resolve("glyphs");
+            guiOffsets.setGlyphNames(new dev.nexobedrock.pack.NexoGlyphNames().read(nexoGlyphs));
             String fingerprint = config.fingerprint() + guiOffsets.fingerprint();
             // Armor definitions live outside the Java resource pack: changing their
             // layers must invalidate the cached Bedrock pack too.
@@ -274,6 +276,7 @@ public final class ConversionService {
             if (!request.force() && guiOffsetsExists) {
                 PackCache.Entry cached = cache.find(cacheKey);
                 if (cached != null) {
+                    guiOffsets.save();
                     return deployCached(config, cached, started);
                 }
             }

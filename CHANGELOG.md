@@ -1,5 +1,9 @@
 # Dev log — NexoBedrock
 
+## v0.1.31
+
+- Identificação automática dos fundos de GUI pelos nomes dos glyphs e caminhos das texturas declarados no Nexo, preservando ajustes existentes e listando correspondências ambíguas.
+
 ## v0.1.30
 
 - Geração automática de `plugins/NexoBedrock/gui-offsets.json` com ajustes individuais de posição para os glyphs de fundo detectados.
