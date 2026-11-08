@@ -47,13 +47,19 @@ public final class GuiOffsets {
         catch (IOException impossible) { throw new IllegalStateException(impossible); }
     }
 
-    public Offset getOrCreate(String id, String texture) throws IOException {
+    public Offset getOrCreate(String id, String texture, String character) throws IOException {
         if (!entries.has(id)) {
             JsonObject entry = new JsonObject();
             entry.addProperty("textura", texture);
+            entry.addProperty("caractere", character);
             entry.addProperty("x", 0);
             entry.addProperty("y", 0);
             entries.add(id, entry);
+            changed = true;
+        }
+        if (!entries.get(id).isJsonObject()) throw new IOException("Ajuste inválido para GUI " + id);
+        if (!entries.getAsJsonObject(id).has("caractere")) {
+            entries.getAsJsonObject(id).addProperty("caractere", character);
             changed = true;
         }
         return read(id);

@@ -60,7 +60,7 @@ public final class ChestGuiOverlayWriter {
                 int width = Math.min(512, Math.max(1,
                         (int) Math.round((double) image.getWidth() * height / image.getHeight())));
                 String character = new String(Character.toChars(target));
-                GuiOffsets.Offset adjustment = offsets.getOrCreate(font.getKey() + ":" + String.format("%04X", source), key);
+                GuiOffsets.Offset adjustment = offsets.getOrCreate(font.getKey() + ":" + String.format("%04X", source), key, row);
                 String match = "(not ($nexobedrock_title - '" + character + "' = $nexobedrock_title))";
                 tests.add("(not (($container_title - '" + character + "') = $container_title))");
                 String texture = textures.add(png, "textures/nexobedrock/gui/glyph_"
