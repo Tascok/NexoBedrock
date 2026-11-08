@@ -48,6 +48,9 @@ Not supported (reported as `unsupported` rather than stopping the whole conversi
 - Custom item components/attributes in Geyser and full `composite` / `select` model handling. Where possible, the first model is used as an approximation and a warning is reported.
 - ModelEngine and other model plugins.
 
+See [the researched feature flows](docs/nexo-bedrock-feature-flows.md) for the
+asset and runtime requirements for furniture, entities, GUI glyphs, and tags.
+
 ### Requirements
 
 - Paper or Purpur 1.21+
@@ -143,7 +146,7 @@ custom_mappings/nexobedrock.json
 
 Under `plugins/NexoBedrock/`, the plugin can keep backups, a conversion cache, an optional output copy, timestamped reports, and temporary work files. Temporary files are removed after conversion unless debug mode is enabled.
 
-The `.mcpack` includes item icons, converted 3D atlases and geometry, item attachables and animations, armor attachables and equipped textures, RGB font glyph pages, a manifest, and a pack icon. Geyser mappings use schema v2 (`format_version: 2`).
+The `.mcpack` includes item icons, converted 3D atlases and geometry, item attachables and animations, armor attachables and equipped textures, a manifest, and a pack icon. Geyser mappings use schema v2 (`format_version: 2`).
 
 ### Conversion overview
 
@@ -222,6 +225,9 @@ Não suportado (registrado como `unsupported`, sem interromper toda a conversão
 - Animações de textura no cliente Bedrock; somente o primeiro frame é usado.
 - Componentes/atributos customizados de itens no Geyser e suporte completo a modelos `composite` / `select`. Quando possível, o primeiro modelo é usado como aproximação e um aviso é registrado.
 - ModelEngine e outros plugins de modelos.
+
+Veja [os fluxos pesquisados](docs/nexo-bedrock-feature-flows.md) para os
+requisitos de assets e runtime de móveis, entidades, glifos de GUI e tags.
 
 ### Requisitos
 
