@@ -10,6 +10,7 @@ import dev.nexobedrock.pack.JavaPack;
 import dev.nexobedrock.pack.NexoItemIndex;
 import dev.nexobedrock.pack.NexoArmorIndex;
 import dev.nexobedrock.pack.NexoPackReader;
+import dev.nexobedrock.pack.ModelEngineAssetReader;
 import dev.nexobedrock.pack.PackItemDefinitionParser;
 import dev.nexobedrock.pack.PackSource;
 import dev.nexobedrock.pack.PackSourceKind;
@@ -183,6 +184,12 @@ public final class ConversionService {
         String sourceLabel = source.kind() + ": " + source.path();
         try {
             JavaPack pack = reader.read(source, config.maxPackSizeMb());
+            Path modelEngineBlueprints = PathUtil.resolve(plugin,
+                    config.modelEngineBlueprintsFolder());
+            Path modelEngineResourcePack = PathUtil.resolve(plugin,
+                    config.modelEngineResourcePackPath());
+            ModelEngineAssetReader.Result modelEngine = new ModelEngineAssetReader().readResult(
+                    modelEngineBlueprints, modelEngineResourcePack);
             List<JavaItemEntry> packEntries = parser.parse(pack);
             ItemIndexBuilder.Result indexed = indexBuilder.build(nexoIndex, packEntries,
                     config, source.kind() == PackSourceKind.ZIP);
@@ -190,7 +197,7 @@ public final class ConversionService {
             Path nexoItems = plugin.getDataFolder().toPath().getParent().resolve("Nexo/items");
             Map<String, NexoArmorIndex.Armor> armor = new NexoArmorIndex().read(nexoItems);
 
-            if (entries.isEmpty()) {
+            if (entries.isEmpty() && modelEngine.assets().isEmpty()) {
                 Report report = report(config, request, pack.source(), pack.sourceHash(),
                         new Stats(0, 0, 0, 0, 0, 0, 0), List.of(),
                         List.of("Nenhum item do Nexo encontrado no pack."),
@@ -207,7 +214,12 @@ public final class ConversionService {
             String armorFingerprint = Hashing.sha256Hex(
                     armor.entrySet().stream().sorted(Map.Entry.comparingByKey()).toList()
                             .toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            String cacheKey = cache.key(pack.sourceHash(), fingerprint + armorFingerprint, pluginVersion);
+            String modelEngineFingerprint = Hashing.sha256Hex(modelEngine.assets().stream()
+                    .map(asset -> asset.id() + "|" + Hashing.sha256Hex(asset.texture()) + "|"
+                            + asset.blueprint().elements() + "|" + asset.blueprint().animationData())
+                    .reduce("", (left, right) -> left + "\n" + right));
+            String cacheKey = cache.key(pack.sourceHash(),
+                    fingerprint + armorFingerprint + modelEngineFingerprint, pluginVersion);
             if (!request.force()) {
                 PackCache.Entry cached = cache.find(cacheKey);
                 if (cached != null) {
@@ -224,7 +236,7 @@ public final class ConversionService {
             BedrockPackBuilder.BuildResult built;
             try {
                 built = packBuilder.build(pack, entries, config, pack.sourceHash(),
-                        pluginVersion, workDir, armor);
+                        pluginVersion, workDir, armor, modelEngine.assets(), modelEngine.warnings());
             } catch (Throwable throwable) {
                 AtomicFiles.deleteTree(workDir);
                 throw throwable;
@@ -242,7 +254,7 @@ public final class ConversionService {
             Report baseReport = report(config, request, pack.source(), pack.sourceHash(),
                     stats, built.reports(), warnings, List.of(), Map.of(), started);
 
-            if (converted == 0) {
+            if (converted == 0 && modelEngine.assets().isEmpty()) {
                 writeWorkReport(workDir, baseReport);
                 writeReports(baseReport);
                 if (!config.debug()) {

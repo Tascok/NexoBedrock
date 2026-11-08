@@ -7,6 +7,8 @@ import dev.nexobedrock.conversion.ConversionService;
 import dev.nexobedrock.listener.NexoPackListener;
 import dev.nexobedrock.listener.BedrockItemNamePacketListener;
 import dev.nexobedrock.hologram.FancyHologramBedrockBridge;
+import dev.nexobedrock.listener.BedrockGuiGlyphPacketListener;
+import dev.nexobedrock.listener.FurnitureProxyBridge;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -16,6 +18,7 @@ public final class NexoBedrockPlugin extends JavaPlugin {
     private final AtomicReference<PluginConfig> config = new AtomicReference<>();
     private ConversionService conversionService;
     private FancyHologramBedrockBridge hologramBridge;
+    private FurnitureProxyBridge furnitureProxyBridge;
 
     @Override
     public void onEnable() {
@@ -56,6 +59,26 @@ public final class NexoBedrockPlugin extends JavaPlugin {
             getLogger().warning("ProtocolLib nao encontrado; reescrita RGB dos nomes de itens desativada.");
         }
 
+        if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
+            new BedrockGuiGlyphPacketListener(this,
+                    getConfig().getString("holograms.bedrock-name-prefix", ".")).register();
+            getLogger().info("Reescrita de glyphs de títulos de inventário Bedrock registrada.");
+        } else {
+            getLogger().warning("ProtocolLib nao encontrado; glyphs de GUI Bedrock nao serao remapeados.");
+        }
+
+        if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
+            try {
+                furnitureProxyBridge = new FurnitureProxyBridge(this,
+                        getConfig().getString("holograms.bedrock-name-prefix", "."));
+                getLogger().info("Ponte de proxies de furniture registrada; requer a extensão Geyser compatível e catálogo convertido.");
+            } catch (Exception exception) {
+                getLogger().warning("Ponte de furniture desativada: " + exception.getMessage());
+            }
+        } else {
+            getLogger().info("Ponte de furniture não iniciada: requer ProtocolLib; para Geyser remoto, instale a extensão no proxy.");
+        }
+
         if (getServer().getPluginManager().isPluginEnabled("FancyHolograms")) {
             hologramBridge = new FancyHologramBedrockBridge(this,
                     getConfig().getString("holograms.bedrock-name-prefix", "."));
@@ -72,6 +95,10 @@ public final class NexoBedrockPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (furnitureProxyBridge != null) {
+            furnitureProxyBridge.close();
+            furnitureProxyBridge = null;
+        }
         if (hologramBridge != null) {
             hologramBridge.close();
             hologramBridge = null;

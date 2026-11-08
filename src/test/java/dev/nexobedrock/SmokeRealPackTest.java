@@ -1,5 +1,6 @@
 package dev.nexobedrock;
 
+import com.google.gson.JsonObject;
 import dev.nexobedrock.bedrock.McpackWriter;
 import dev.nexobedrock.bedrock.BedrockPackValidator;
 import dev.nexobedrock.config.MappingMode;
@@ -57,6 +58,8 @@ class SmokeRealPackTest {
                 + " warnings=" + pack.warnings().size());
         assertFalse(pack.models().isEmpty());
         assertFalse(pack.textures().isEmpty());
+        assertFalse(pack.fonts().isEmpty(), "font providers nao foram lidos");
+        assertTrue(pack.fonts().containsKey("nexo:default"), "fonte do Nexo nao encontrada");
 
         List<JavaItemEntry> packEntries = new PackItemDefinitionParser().parse(pack);
         System.out.println("PACK entries=" + packEntries.size());
@@ -95,6 +98,7 @@ class SmokeRealPackTest {
         List<String> geometryFiles = new ArrayList<>();
         List<String> attachableFiles = new ArrayList<>();
         List<String> animationFiles = new ArrayList<>();
+        List<String> glyphPages = new ArrayList<>();
         try (ZipFile zipFile = new ZipFile(built.mcpackPath().toFile())) {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements()) {
@@ -111,6 +115,8 @@ class SmokeRealPackTest {
                     animationFiles.add(name);
                     Json.parseObject(zipFile.getInputStream(
                             zipFile.getEntry(name)).readAllBytes());
+                } else if (name.startsWith("font/glyph_") && name.endsWith(".png")) {
+                    glyphPages.add(name);
                 }
             }
         }
@@ -119,6 +125,54 @@ class SmokeRealPackTest {
                 + " animations=" + animationFiles.size());
         assertTrue(geometryFiles.size() >= built.threeD());
         assertTrue(attachableFiles.size() == built.threeD());
+        assertTrue(!glyphPages.isEmpty(), "nenhuma pagina Bedrock de glyph foi gerada");
+        try (ZipFile generated = new ZipFile(built.mcpackPath().toFile())) {
+            JsonObject glyphMap = Json.parseObject(generated.getInputStream(
+                    generated.getEntry("nexobedrock/glyph-map.json")).readAllBytes());
+            assertTrue(glyphMap.getAsJsonObject("glyphs").size() > 0);
+        }
+        JavaItemEntry furnitureSource = built.items().stream()
+                .filter(item -> !item.flat())
+                .map(dev.nexobedrock.conversion.ConvertedItem::entry)
+                .findFirst().orElseThrow();
+        JavaItemEntry furniture = new JavaItemEntry("smoke_furniture",
+                furnitureSource.javaItem(), furnitureSource.mode(),
+                furnitureSource.customModelData(), furnitureSource.itemModel(),
+                furnitureSource.modelPath(), furnitureSource.displayName(),
+                java.util.Set.of("furniture"), "smoke");
+        var furnitureBuild = new BedrockPackBuilder().build(pack, List.of(furniture), config,
+                pack.sourceHash(), "smoke", work.resolve("furniture"));
+        assertEquals(1, furnitureBuild.threeD(), "furniture model geometry was not generated");
+        try (ZipFile generated = new ZipFile(furnitureBuild.mcpackPath().toFile())) {
+            JsonObject catalog = Json.parseObject(generated.getInputStream(
+                    generated.getEntry("nexobedrock/furniture-catalog.json")).readAllBytes());
+            assertTrue(!catalog.get("runtime_ready").getAsBoolean());
+            JsonObject entry = catalog.getAsJsonObject("furniture").getAsJsonObject("smoke_furniture");
+            assertTrue(entry.has("model_index"));
+            assertTrue(entry.has("geometry"));
+            String entityPath = "entity/smoke_furniture.entity.json";
+            assertTrue(generated.getEntry(entityPath) != null,
+                    "custom Bedrock client entity definition was not generated");
+            JsonObject entity = Json.parseObject(generated.getInputStream(
+                    generated.getEntry(entityPath)).readAllBytes());
+            JsonObject description = entity.getAsJsonObject("minecraft:client_entity")
+                    .getAsJsonObject("description");
+            assertEquals("nexobedrock:smoke_furniture",
+                    description.get("identifier").getAsString());
+            String controllerId = description.getAsJsonArray("render_controllers")
+                    .get(0).getAsString();
+            String controllerPath = "render_controllers/nexobedrock_furniture.render_controllers.json";
+            assertTrue(generated.getEntry(controllerPath) != null,
+                    "furniture render controller file was not generated");
+            JsonObject controllerFile = Json.parseObject(generated.getInputStream(
+                    generated.getEntry(controllerPath)).readAllBytes());
+            assertTrue(controllerFile.getAsJsonObject("render_controllers").has(controllerId),
+                    "entity references an undeclared render controller");
+            String runtimeMap = new String(generated.getInputStream(generated.getEntry(
+                    "nexobedrock/furniture-mappings.properties")).readAllBytes(),
+                    java.nio.charset.StandardCharsets.UTF_8);
+            assertTrue(runtimeMap.contains("0=nexobedrock:smoke_furniture"));
+        }
         JavaItemEntry crossbow = indexed.entries().stream()
                 .filter(item -> "minecraft:crossbow".equals(item.javaItem()))
                 .findFirst().orElseThrow();

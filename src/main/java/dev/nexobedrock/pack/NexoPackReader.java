@@ -22,8 +22,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
- * Le um pack Java (diretorio de assets ou zip) sem carregar sons, fontes,
- * blockstates ou outros recursos irrelevantes para o MVP.
+ * Lê modelos, definições de itens, fontes bitmap e texturas do pack Java.
  */
 public final class NexoPackReader {
     private static final int MAX_ENTRIES = 200_000;
@@ -46,6 +45,7 @@ public final class NexoPackReader {
 
         Map<String, JsonObject> models = new LinkedHashMap<>();
         Map<String, JsonObject> itemDefinitions = new LinkedHashMap<>();
+        Map<String, JsonObject> fonts = new LinkedHashMap<>();
         Map<String, byte[]> textures = new LinkedHashMap<>();
         Set<String> animatedTextures = new LinkedHashSet<>();
         List<String> warnings = new ArrayList<>();
@@ -60,7 +60,7 @@ public final class NexoPackReader {
                 throw new IOException("Pack excede o limite de " + (maxBytes / 1024 / 1024) + " MB");
             }
             readAsset(relative, () -> Files.readAllBytes(file), fileSize, models,
-                    itemDefinitions, textures, animatedTextures, warnings);
+                    itemDefinitions, fonts, textures, animatedTextures, warnings);
         }
 
         String hash = Hashing.sha256HexDirectory(assetsRoot,
@@ -70,8 +70,8 @@ public final class NexoPackReader {
                             || name.endsWith(".mcmeta");
                 });
 
-        return new JavaPack(assetsRoot.toString(), hash, models, itemDefinitions, textures,
-                animatedTextures, warnings, size[0]);
+        return new JavaPack(assetsRoot.toString(), hash, models, itemDefinitions, fonts,
+                textures, animatedTextures, warnings, size[0]);
     }
 
     private JavaPack readZip(Path path, long maxBytes) throws IOException {
@@ -85,6 +85,7 @@ public final class NexoPackReader {
 
         Map<String, JsonObject> models = new LinkedHashMap<>();
         Map<String, JsonObject> itemDefinitions = new LinkedHashMap<>();
+        Map<String, JsonObject> fonts = new LinkedHashMap<>();
         Map<String, byte[]> textures = new LinkedHashMap<>();
         Set<String> animatedTextures = new LinkedHashSet<>();
         List<String> warnings = new ArrayList<>();
@@ -119,23 +120,24 @@ public final class NexoPackReader {
                 String relative = name.substring("assets/".length());
                 try (InputStream input = zip.getInputStream(entry)) {
                     readAsset(relative, () -> readLimited(input, MAX_TEXTURE_BYTES),
-                            declaredSize, models, itemDefinitions, textures, animatedTextures,
-                            warnings);
+                            declaredSize, models, itemDefinitions, fonts, textures,
+                            animatedTextures, warnings);
                 }
             }
         }
 
         String hash = Hashing.sha256Hex(path);
-        return new JavaPack(path.toString(), hash, models, itemDefinitions, textures,
+        return new JavaPack(path.toString(), hash, models, itemDefinitions, fonts, textures,
                 animatedTextures, warnings, fileSize);
     }
 
     private void readAsset(String relative,
                            ByteSupplier bytes,
                            long size,
-                           Map<String, JsonObject> models,
-                           Map<String, JsonObject> itemDefinitions,
-                           Map<String, byte[]> textures,
+                            Map<String, JsonObject> models,
+                            Map<String, JsonObject> itemDefinitions,
+                            Map<String, JsonObject> fonts,
+                            Map<String, byte[]> textures,
                            Set<String> animatedTextures,
                            List<String> warnings) {
         String lower = relative.toLowerCase(java.util.Locale.ROOT);
@@ -162,6 +164,17 @@ public final class NexoPackReader {
                 }
                 byte[] data = bytes.get();
                 itemDefinitions.put(key, Json.parseObject(data));
+            } else if (lower.endsWith(".json") && relative.contains("/font/")) {
+                String key = assetKey(relative, "/font/");
+                if (key == null) {
+                    return;
+                }
+                if (size > MAX_JSON_BYTES) {
+                    warnings.add("Fonte ignorada por tamanho: " + relative);
+                    return;
+                }
+                byte[] data = bytes.get();
+                fonts.put(key, Json.parseObject(data));
             } else if (lower.endsWith(".png") && relative.contains("/textures/")) {
                 String key = textureKey(relative);
                 if (key == null) {

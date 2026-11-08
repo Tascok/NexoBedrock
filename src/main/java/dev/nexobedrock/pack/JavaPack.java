@@ -11,6 +11,7 @@ public record JavaPack(
         String sourceHash,
         Map<String, JsonObject> models,
         Map<String, JsonObject> itemDefinitions,
+        Map<String, JsonObject> fonts,
         Map<String, byte[]> textures,
         Set<String> animatedTextures,
         List<String> warnings,
@@ -19,8 +20,15 @@ public record JavaPack(
     public JavaPack(String source, String sourceHash, Map<String, JsonObject> models,
                     Map<String, JsonObject> itemDefinitions, Map<String, byte[]> textures,
                     List<String> warnings, long sizeBytes) {
-        this(source, sourceHash, models, itemDefinitions, textures, Set.of(), warnings,
-                sizeBytes);
+        this(source, sourceHash, models, itemDefinitions, Map.of(), textures, Set.of(),
+                warnings, sizeBytes);
+    }
+
+    public JavaPack(String source, String sourceHash, Map<String, JsonObject> models,
+                    Map<String, JsonObject> itemDefinitions, Map<String, byte[]> textures,
+                    Set<String> animatedTextures, List<String> warnings, long sizeBytes) {
+        this(source, sourceHash, models, itemDefinitions, Map.of(), textures, animatedTextures,
+                warnings, sizeBytes);
     }
 
     public JsonObject model(String key) {
@@ -29,6 +37,10 @@ public record JavaPack(
 
     public JsonObject itemDefinition(String key) {
         return itemDefinitions.get(key);
+    }
+
+    public JsonObject font(String key) {
+        return fonts.get(key);
     }
 
     public byte[] texture(String key) {

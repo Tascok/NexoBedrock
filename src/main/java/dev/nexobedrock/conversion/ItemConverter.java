@@ -82,9 +82,6 @@ public final class ItemConverter {
         if (entry.hasFlag("armor") || isArmor(entry.javaItem())) {
             return Outcome.unsupported(entry, "armadura/elytra fora do escopo do MVP");
         }
-        if (entry.hasFlag("furniture")) {
-            return Outcome.unsupported(entry, "furniture fora do escopo do MVP");
-        }
         if (entry.modelPath() == null || entry.modelPath().isBlank()) {
             return Outcome.skipped(entry, "sem modelo associado");
         }

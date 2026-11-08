@@ -1,0 +1,6 @@
+id: nexobedrock
+name: NexoBedrock
+main: dev.nexobedrock.geyser.extension.NexoBedrockExtension
+api: 2.11.0
+version: '${version}'
+authors: [NexoBedrock]

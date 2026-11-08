@@ -41,6 +41,10 @@ geyser:
   # Geyser-Spigot local. Para Geyser-Velocity, aponte para os diretorios do proxy.
   packs-folder: "plugins/Geyser-Spigot/packs"
   mappings-folder: "plugins/Geyser-Spigot/custom_mappings"
+  # Optional path to the NexoBedrock Geyser extension data folder. For a proxy
+  # in another container/server, configure a shared/mounted directory here.
+  # Leave empty to avoid writing to a path that is not consumed by Geyser.
+  extension-data-folder: ""
   pack-name: "nexobedrock"
   # Executa "geyser reload" depois do deploy. Um restart completo do Geyser
   # pode ser necessario para recarregar custom mappings.
@@ -55,6 +59,12 @@ geyser:
   # Material usado nos attachables de itens 3D.
   # entity_alphatest_one_sided (padrao) ou entity_alphatest.
   attachable-material: "entity_alphatest_one_sided"
+
+# ModelEngine R4 sources. Conversion writes static Bedrock geometry, source
+# textures and basic keyframes; live entity synchronization is not enabled yet.
+modelengine:
+  blueprints-folder: "plugins/ModelEngine/blueprints"
+  resource-pack-path: "plugins/ModelEngine/resource pack.zip"
 
 conversion:
   include-2d: true

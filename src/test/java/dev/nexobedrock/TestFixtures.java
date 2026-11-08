@@ -21,7 +21,8 @@ public final class TestFixtures {
         return new PluginConfig(
                 true, true,
                 "plugins/Nexo/pack/pack.zip", "plugins/Nexo/pack/assets", true,
-                "plugins/Geyser-Spigot/packs", "plugins/Geyser-Spigot/custom_mappings",
+                "plugins/Geyser-Spigot/packs", "plugins/Geyser-Spigot/custom_mappings", "",
+                "plugins/ModelEngine/blueprints", "plugins/ModelEngine/resource pack.zip",
                 "nexobedrock", false, "geyser reload", true, true, 10,
                 true, true, 100, false,
                 MappingMode.LEGACY, "nexobedrock", "items", HandheldMode.AUTO,

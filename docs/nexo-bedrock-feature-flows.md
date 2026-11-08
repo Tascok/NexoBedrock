@@ -7,16 +7,33 @@ depois de gerar os arquivos necessários e validar o comportamento em Bedrock.
 
 ## Estado encontrado no NexoBedrock
 
-- O conversor lê modelos, definições de itens e PNGs do pack Java. `NexoPackReader`
-  ignora fontes, blockstates, sons e texturas de GUI.
+- O conversor lê modelos, definições de itens, fontes bitmap e PNGs do pack Java.
+  `NexoPackReader` ainda ignora blockstates, sons e texturas independentes de GUI.
 - `NexoItemIndex` consulta os itens via API pública do Nexo e marca a mechanic
-  `furniture`; `ItemConverter` então rejeita esse item como fora do MVP.
+  `furniture`; modelos resolvidos passam pelo conversor e são listados em
+  `nexobedrock/furniture-catalog.json`. O catálogo declara `runtime_ready: false`:
+  é preparação de assets, não sincronização de instâncias.
+- O pack inclui uma definição `entity/*.entity.json` para cada furniture 3D e
+  `nexobedrock/furniture-mappings.properties` com índices determinísticos por ID.
+  A extensão Geyser agora lê esses índices (copiados para sua pasta de dados),
+  registra as definições e reconhece UUIDs sintéticos marcados `NEXO` no evento
+  de spawn. O protocolo de UUID preserva um identificador único de instância e
+  o índice de modelo; testes cobrem parser e codificação.
 - O pack Bedrock atual gera `item_texture.json`, geometria/attachables de itens e
   mappings v2 do Geyser. Isso resolve a aparência do item, não a entidade que o
   Nexo coloca no mundo.
-- A saída publicada no servidor foi inspecionada: o pack tem 147 entradas, não
-  contém páginas `font/glyph_*.png`, e os mappings não contêm codepoints PUA.
-  Logo, a menção a glyph pages na lista de arquivos gerados do README era obsoleta.
+- O leitor/conversor agora reconhece JSON de fonte com providers `bitmap`, cria
+  folhas Bedrock `font/glyph_E2.png`–`glyph_F8.png` com codepoints de saída e
+  registra o mapa fonte/codepoint em `nexobedrock/glyph-map.json` dentro do pack.
+  O listener Paper usa ProtocolLib para remapear texto `OPEN_WINDOW` de clientes
+  Bedrock com o prefixo configurado. Providers `space`/`reference` são avisados,
+  e ascent/avanço do Java não são reproduzidos precisamente. Para Geyser remoto,
+  o pack precisa estar acessível no caminho configurado no Paper; sincronização
+  automática da tabela para a extensão Geyser ainda não foi implementada.
+- O smoke test executado contra o pack real do servidor converteu 99 glyphs para
+  16 folhas quadradas e incluiu o mapa de codepoints; nenhum Bedrock client foi
+  conectado para validação visual, portanto alinhamento e nitidez ainda precisam
+  de teste in-game.
 
 ## Fluxos por funcionalidade
 
@@ -45,6 +62,29 @@ Paper e Geyser. Os parâmetros `block_tags`, `block_types` e `nexo_blocks` da
 mechanic controlam onde o servidor Java permite colocar o móvel; não são
 Bedrock block tags e não afetam o desenho do modelo.
 
+**Etapa implementada:** furniture com modelo Java de item válido gera geometria
+e atlas Bedrock, mais uma entrada de catálogo com identificador, geometry,
+textura, attachable, item Java e modelo de origem. Transformações específicas da
+mechanic e associação de cada spawn Java à entrada continuam pendentes.
+
+**Runtime em implementação:** no Paper, `FurnitureProxyBridge` acompanha os
+`ItemDisplay` via API `NexoFurniture`, cria Armor Stands de proxy com índice no
+PDC, suprime spawn/updates/destroy para Java via ProtocolLib e reescreve o UUID
+de spawn para o marcador `NEXO` somente para jogadores Bedrock. Os proxies são
+reconciliados com furniture carregada e teletransportados a cada 2 ticks; remoção
+do proxy gera o destroy normal para Bedrock. A extensão consome o marcador no
+`ServerSpawnEntityEvent` e troca a definição pela custom entity correspondente.
+
+Quando `geyser.extension-data-folder` aponta para a pasta de dados da extensão,
+Paper publica o mapping atomicamente, preserva backup e avisa que o Geyser deve
+ser reiniciado. Com essa opção vazia, nenhuma cópia é tentada. No servidor atual,
+Geyser fica em outro container, o caminho compartilhado não está configurado e
+a extensão ainda não está instalada; não foi feito deploy nem validação visual
+com cliente Bedrock. Escala, quaternion,
+iluminação, tintas/estados e interações de furniture ainda não são sincronizados.
+Por isso o catálogo permanece `runtime_ready: false` e não se declara suporte
+completo.
+
 ### Entidades e ModelEngine
 
 1. Descobrir entidades/modelos suportados através da integração do plugin de
@@ -63,6 +103,18 @@ Bedrock block tags e não afetam o desenho do modelo.
 configurável por JSON mappings. A implementação deve fixar/validar a versão da
 API e manter o protocolo Paper↔Geyser versionado. Modelos de entidade no pack,
 sozinhos, não convertem entidades Java nem sincronizam animações.
+
+**Pesquisa/etapa parcial:** o ModelEngine R4 instalado armazena blueprints
+Blockbench `.bbmodel`; o pack gerado contém modelos por osso, texturas e a
+hierarquia/clips ficam no blueprint. O pipeline agora lê a pasta configurada de
+blueprints e `resource pack.zip`, extrai a textura do modelo, preserva rig/pivots
+e gera geometry, definições de entidade Bedrock, catálogo e keyframes básicos
+de `position`/`rotation`/`scale`. Interpolação Catmull-Rom é aproximada como
+linear e avisada. O smoke de integração usou `nm_black_widow.bbmodel`: 22
+elementos, 12 bones, 1 textura, 3 clips, geometry com 19 cubos; o `.mcpack`
+gerado continha modelo, textura e animações. `runtime_ready` segue false: falta
+sincronizar spawn/identidade/estado de cada entidade ModelEngine e disparar seus
+clips ativos na extensão Geyser. Não é validação visual em Bedrock.
 
 ### GUIs, HUDs, glyphs e ícones de menu
 

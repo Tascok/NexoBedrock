@@ -42,11 +42,12 @@ Not supported (reported as `unsupported` rather than stopping the whole conversi
 
 - Custom blocks and blockstates.
 - Elytra, capes, and custom entity models.
-- Furniture, display entities, item frames, and other entities.
-- Fonts, glyphs, GUIs, menu icons, and sounds.
+- Rendering NexoFurniture in the world, display entities, item frames, and other entities. Furniture models that resolve as item models are converted and listed in `nexobedrock/furniture-catalog.json`, but this asset catalog does not spawn or synchronize Bedrock entities.
+- Full font-provider support, HUD/GUI overrides, and independent GUI textures. Bitmap glyphs used in inventory titles are converted, but Java font metrics/layout remain approximate; `space` and `reference` providers are not reproduced.
+- Sounds.
 - Bedrock client-side animated textures; only the first frame is used.
 - Custom item components/attributes in Geyser and full `composite` / `select` model handling. Where possible, the first model is used as an approximation and a warning is reported.
-- ModelEngine and other model plugins.
+- Live ModelEngine entity tracking, per-instance animation playback, and other model plugins. Static ModelEngine R4 geometry/texture/basic animation assets are generated when configured; the Geyser runtime association is not implemented.
 
 See [the researched feature flows](docs/nexo-bedrock-feature-flows.md) for the
 asset and runtime requirements for furniture, entities, GUI glyphs, and tags.
@@ -98,6 +99,7 @@ source:
 geyser:
   packs-folder: "plugins/Geyser-Spigot/packs"
   mappings-folder: "plugins/Geyser-Spigot/custom_mappings"
+  extension-data-folder: ""
   pack-name: "nexobedrock"
   restart-geyser: false
   reload-command: "geyser reload"
@@ -105,6 +107,10 @@ geyser:
   backup: true
   backup-keep: 10
   attachable-material: "entity_alphatest_one_sided"
+
+modelengine:
+  blueprints-folder: "plugins/ModelEngine/blueprints"
+  resource-pack-path: "plugins/ModelEngine/resource pack.zip"
 
 conversion:
   include-2d: true
@@ -124,6 +130,8 @@ conversion:
 - `source.pack-path`: final Nexo pack, used by manual conversion and as a fallback.
 - `source.assets-path`: pre-obfuscation assets, preferred during the Nexo event when enabled.
 - `geyser.packs-folder` / `geyser.mappings-folder`: destination directories for Geyser.
+- `geyser.extension-data-folder`: optional path to the `nexobedrock` Geyser extension data folder. When configured, the plugin publishes furniture mappings there atomically and keeps a backup; restart Geyser to load changed mappings. Use a shared/mounted path if Geyser runs remotely. Empty by default.
+- `modelengine.blueprints-folder` / `modelengine.resource-pack-path`: ModelEngine R4 blueprint and generated Java pack inputs. When found, static Bedrock geometry, source texture and converted basic bone keyframes are emitted, but live entity synchronization and advanced interpolation remain unsupported.
 - `geyser.backup`: backs up existing pack and mappings before replacement.
 - `mapping-mode`: `legacy` uses `custom_model_data`; `modern` uses `item_model`; `auto` chooses based on the item definition.
 - `namespace`: Bedrock item namespace; it cannot be `minecraft`.
@@ -146,14 +154,14 @@ custom_mappings/nexobedrock.json
 
 Under `plugins/NexoBedrock/`, the plugin can keep backups, a conversion cache, an optional output copy, timestamped reports, and temporary work files. Temporary files are removed after conversion unless debug mode is enabled.
 
-The `.mcpack` includes item icons, converted 3D atlases and geometry, item attachables and animations, armor attachables and equipped textures, a manifest, and a pack icon. Geyser mappings use schema v2 (`format_version: 2`).
+The `.mcpack` includes item icons, converted 3D atlases and geometry, item attachables and animations, armor attachables and equipped textures, Bedrock bitmap glyph pages and a source-codepoint map when Java bitmap providers are present, a manifest, and a pack icon. Geyser mappings use schema v2 (`format_version: 2`).
 
 ### Conversion overview
 
 1. Snapshot Nexo items through its public API.
-2. Read models, item definitions, textures, and texture metadata from the resource pack.
+2. Read models, item definitions, bitmap font providers, textures, and texture metadata from the resource pack.
 3. Resolve model parents, texture variables, legacy overrides, and modern custom-model-data range dispatches.
-4. Generate item icons and, for 3D items, Bedrock geometry, atlases, attachables, and display animations. For Nexo armor, keep the GUI icon separate from the equipped armor layer and create an attachable for the corresponding equipment slot.
+4. Generate item icons and, for 3D items, Bedrock geometry, atlases, attachables, and display animations. For Nexo armor, keep the GUI icon separate from the equipped armor layer and create an attachable for the corresponding equipment slot. Bitmap font glyphs are packed into Bedrock Unicode sheets and inventory-title packets are remapped for identified Bedrock players when ProtocolLib is installed.
 5. Generate Geyser mappings and publish the pack and mappings using temporary files and atomic moves where supported, keeping backups of prior files.
 6. Write a per-item conversion report.
 
@@ -220,11 +228,12 @@ Não suportado (registrado como `unsupported`, sem interromper toda a conversão
 
 - Blocos customizados e blockstates.
 - Elytra, capas e modelos de entidades customizadas.
-- Móveis, display entities, molduras de itens e outras entidades.
-- Fontes, glifos, GUIs, ícones de menu e sons.
+- Renderização de NexoFurniture no mundo, display entities, molduras de itens e outras entidades. Modelos de móveis que resolvem como modelos de item são convertidos e listados em `nexobedrock/furniture-catalog.json`, mas esse catálogo de assets não cria nem sincroniza entidades Bedrock.
+- Providers de fonte completos, overrides de HUD/GUI e texturas independentes de GUI. Glifos bitmap em títulos de inventário são convertidos, mas métricas/layout Java permanecem aproximados; providers `space` e `reference` não são reproduzidos.
+- Sons.
 - Animações de textura no cliente Bedrock; somente o primeiro frame é usado.
 - Componentes/atributos customizados de itens no Geyser e suporte completo a modelos `composite` / `select`. Quando possível, o primeiro modelo é usado como aproximação e um aviso é registrado.
-- ModelEngine e outros plugins de modelos.
+- Rastreamento de entidades ModelEngine ao vivo, reprodução de animações por instância e outros plugins de modelos. Assets estáticos de geometria/textura/keyframes básicos do ModelEngine R4 são gerados quando configurados; a associação com runtime Geyser ainda não foi implementada.
 
 Veja [os fluxos pesquisados](docs/nexo-bedrock-feature-flows.md) para os
 requisitos de assets e runtime de móveis, entidades, glifos de GUI e tags.
@@ -276,6 +285,7 @@ source:
 geyser:
   packs-folder: "plugins/Geyser-Spigot/packs"
   mappings-folder: "plugins/Geyser-Spigot/custom_mappings"
+  extension-data-folder: ""
   pack-name: "nexobedrock"
   restart-geyser: false
   reload-command: "geyser reload"
@@ -283,6 +293,10 @@ geyser:
   backup: true
   backup-keep: 10
   attachable-material: "entity_alphatest_one_sided"
+
+modelengine:
+  blueprints-folder: "plugins/ModelEngine/blueprints"
+  resource-pack-path: "plugins/ModelEngine/resource pack.zip"
 
 conversion:
   include-2d: true
@@ -302,6 +316,8 @@ conversion:
 - `source.pack-path`: pack final do Nexo, usado na conversão manual e como alternativa.
 - `source.assets-path`: assets anteriores à obfuscação, preferidos durante o evento quando habilitado.
 - `geyser.packs-folder` / `geyser.mappings-folder`: pastas de destino do Geyser.
+- `geyser.extension-data-folder`: caminho opcional para a pasta de dados da extensão Geyser `nexobedrock`. Quando configurado, o plugin publica os mappings de furniture atomicamente e guarda backup; reinicie o Geyser para carregar alterações. Use um caminho compartilhado/montado se o Geyser estiver remoto. Vazio por padrão.
+- `modelengine.blueprints-folder` / `modelengine.resource-pack-path`: entradas dos blueprints e do pack Java gerado pelo ModelEngine R4. Quando encontrados, são gerados geometria Bedrock estática, textura de origem e keyframes básicos dos bones; sincronização de entidades ao vivo e interpolação avançada continuam sem suporte.
 - `geyser.backup`: faz backup do pack e dos mappings existentes antes de substituí-los.
 - `mapping-mode`: `legacy` usa `custom_model_data`; `modern` usa `item_model`; `auto` escolhe com base na definição do item.
 - `namespace`: namespace dos itens Bedrock; não pode ser `minecraft`.
@@ -324,14 +340,14 @@ custom_mappings/nexobedrock.json
 
 Em `plugins/NexoBedrock/`, o plugin pode manter backups, cache de conversões, uma cópia opcional da saída, relatórios com timestamp e arquivos temporários. Os arquivos temporários são removidos após a conversão, exceto quando o modo debug está habilitado.
 
-O `.mcpack` inclui ícones, atlas e geometria de itens 3D, attachables e animações dos itens, attachables e texturas equipadas de armadura, páginas de glyphs RGB, manifesto e ícone do pack. Os mappings do Geyser usam o schema v2 (`format_version: 2`).
+O `.mcpack` inclui ícones, atlas e geometria de itens 3D, attachables e animações dos itens, attachables e texturas equipadas de armadura, páginas Bedrock de glyphs bitmap e um mapa de codepoints de origem quando há providers bitmap Java, manifesto e ícone do pack. Os mappings do Geyser usam o schema v2 (`format_version: 2`).
 
 ### Como a conversão funciona
 
 1. Captura os itens do Nexo pela API pública.
-2. Lê modelos, definições de itens, texturas e metadados de textura do resource pack.
+2. Lê modelos, definições de itens, providers bitmap de fontes, texturas e metadados de textura do resource pack.
 3. Resolve modelos-pai, variáveis de textura, overrides legados e `range_dispatch` moderno de custom model data.
-4. Gera ícones e, para itens 3D, geometria Bedrock, atlas, attachables e animações de exibição. Para armaduras do Nexo, mantém o ícone de inventário separado da camada equipada e cria um attachable para o slot correspondente.
+4. Gera ícones e, para itens 3D, geometria Bedrock, atlas, attachables e animações de exibição. Para armaduras do Nexo, mantém o ícone de inventário separado da camada equipada e cria um attachable para o slot correspondente. Glyphs bitmap são empacotados em folhas Unicode Bedrock e os pacotes de título de inventário são remapeados para jogadores Bedrock identificados quando ProtocolLib está instalado.
 5. Gera os mappings do Geyser e publica pack e mappings usando arquivos temporários e movimentação atômica quando disponível, mantendo backups dos arquivos anteriores.
 6. Escreve um relatório de conversão por item.
 
