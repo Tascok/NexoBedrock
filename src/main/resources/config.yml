@@ -7,8 +7,6 @@
 #
 # Caminhos relativos sao resolvidos a partir da raiz do servidor.
 
-config-version: 2
-
 enabled: true
 
 # Formatação dos nomes display_name nos mappings Geyser (texto do item Nexo).
@@ -23,8 +21,7 @@ bedrock-text:
 # O prefixo deve corresponder a Floodgate-Velocity (padrão: ".").
 holograms:
   # Renderiza hologramas de texto do FancyHolograms com Armor Stands somente para Bedrock.
-  # Os textos estáticos viram glyphs de textura; reconverta o pack depois de alterar hologramas.
-  # Altere e aplique com /nexobedrock reload.
+  # Altere e aplique com /nexobedrock reload. Desativado por padrão até validação visual.
   enabled: false
   bedrock-name-prefix: "."
 

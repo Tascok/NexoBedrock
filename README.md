@@ -127,7 +127,7 @@ conversion:
 - `creative-category`: one of `all`, `construction`, `nature`, `equipment`, `items`, `item_command_only`, or `none`.
 - `display-handheld`: `auto`, `true`, or `false`.
 - `holograms.bedrock-name-prefix`: Floodgate username prefix used to identify Bedrock players on the Paper backend; defaults to `.`. ProtocolLib is needed only for RGB item-name packet rewriting.
-- `holograms.enabled`: when FancyHolograms is installed, renders its text holograms as per-Bedrock-player Armor Stands using baked glyphs. Re-run `/nexobedrock convert --force` after changing static hologram text so the Bedrock pack includes its glyphs; player-dependent placeholder output cannot be pre-baked.
+- `holograms.enabled`: when FancyHolograms is installed, renders its text holograms as per-Bedrock-player Armor Stands. Toggle this and run `/nexobedrock reload`; defaults to `false` so it can be visually tested before enabling.
 - `max-pack-size-mb`: input/output size limit. If the generated pack exceeds it, existing Geyser files are left untouched.
 - `max-atlas-tiles` / `max-atlas-tile-size`: protect against unusually large texture atlases.
 - `keep-output-copy`: also keeps a copy under `plugins/NexoBedrock/output/`.
@@ -302,7 +302,7 @@ conversion:
 - `creative-category`: uma destas opções: `all`, `construction`, `nature`, `equipment`, `items`, `item_command_only` ou `none`.
 - `display-handheld`: `auto`, `true` ou `false`.
 - `holograms.bedrock-name-prefix`: prefixo de usuário do Floodgate usado para identificar jogadores Bedrock no backend Paper; o padrão é `.`. ProtocolLib é necessário apenas para reescrever nomes RGB de itens nos pacotes.
-- `holograms.enabled`: com FancyHolograms instalado, renderiza seus hologramas de texto como Armor Stands por jogador Bedrock usando glyphs rasterizados. Execute `/nexobedrock convert --force` após alterar textos estáticos para incluir seus glyphs no pack; conteúdo variável por jogador (placeholders) não pode ser pré-renderizado.
+- `holograms.enabled`: com FancyHolograms instalado, renderiza seus hologramas de texto como Armor Stands por jogador Bedrock. Altere e execute `/nexobedrock reload`; começa como `false` para permitir validação visual antes de ativar.
 - `max-pack-size-mb`: limite de tamanho de entrada/saída. Se o pack gerado exceder o limite, os arquivos existentes do Geyser são preservados.
 - `max-atlas-tiles` / `max-atlas-tile-size`: protegem contra atlas de textura excepcionalmente grandes.
 - `keep-output-copy`: também mantém uma cópia em `plugins/NexoBedrock/output/`.

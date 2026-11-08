@@ -2,7 +2,6 @@ package dev.nexobedrock.conversion;
 
 import dev.nexobedrock.config.PluginConfig;
 import dev.nexobedrock.bedrock.BedrockPackValidator;
-import dev.nexobedrock.bedrock.GlyphTextMap;
 import dev.nexobedrock.geyser.GeyserDeployer;
 import dev.nexobedrock.geyser.MappingWriter;
 import dev.nexobedrock.pack.ItemIndexBuilder;
@@ -120,15 +119,11 @@ public final class ConversionService {
                     + throwable.getMessage());
         }
 
-        List<String> extraGlyphTexts = plugin instanceof dev.nexobedrock.NexoBedrockPlugin nexoPlugin
-                && nexoPlugin.getHologramBridge() != null
-                && nexoPlugin.getHologramBridge().isEnabled()
-                ? nexoPlugin.getHologramBridge().snapshotGlyphInputs() : List.of();
         NexoItemIndex snapshot = nexoIndex;
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             ConversionResult result;
             try {
-                result = run(request, snapshot, extraGlyphTexts);
+                result = run(request, snapshot);
             } catch (Throwable throwable) {
                 logger.severe("NexoBedrock: conversao falhou: " + throwable);
                 result = ConversionResult.failure("Erro inesperado: "
@@ -157,8 +152,7 @@ public final class ConversionService {
         }
     }
 
-    private ConversionResult run(ConversionRequest request, NexoItemIndex nexoIndex,
-                                 List<String> extraGlyphTexts) {
+    private ConversionResult run(ConversionRequest request, NexoItemIndex nexoIndex) {
         long started = System.nanoTime();
         if (closed) {
             return ConversionResult.failure("Plugin desabilitado durante a conversao.",
@@ -208,15 +202,12 @@ public final class ConversionService {
             }
 
             String fingerprint = config.fingerprint();
-            String glyphFingerprint = Hashing.sha256Hex(
-                    String.join("\n", extraGlyphTexts).getBytes(java.nio.charset.StandardCharsets.UTF_8));
             // Armor definitions live outside the Java resource pack: changing their
             // layers must invalidate the cached Bedrock pack too.
             String armorFingerprint = Hashing.sha256Hex(
                     armor.entrySet().stream().sorted(Map.Entry.comparingByKey()).toList()
                             .toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            String cacheKey = cache.key(pack.sourceHash(),
-                    fingerprint + armorFingerprint + glyphFingerprint, pluginVersion);
+            String cacheKey = cache.key(pack.sourceHash(), fingerprint + armorFingerprint, pluginVersion);
             if (!request.force()) {
                 PackCache.Entry cached = cache.find(cacheKey);
                 if (cached != null) {
@@ -233,7 +224,7 @@ public final class ConversionService {
             BedrockPackBuilder.BuildResult built;
             try {
                 built = packBuilder.build(pack, entries, config, pack.sourceHash(),
-                        pluginVersion, workDir, armor, extraGlyphTexts);
+                        pluginVersion, workDir, armor);
             } catch (Throwable throwable) {
                 AtomicFiles.deleteTree(workDir);
                 throw throwable;
@@ -272,11 +263,9 @@ public final class ConversionService {
                         report, elapsedMs(started));
             }
 
-            byte[] mappings = mappingWriter.write(built.items(), config, built.glyphRewrites());
-            byte[] glyphMap = GlyphTextMap.encode(built.glyphRewrites());
+            byte[] mappings = mappingWriter.write(built.items(), config);
             new BedrockPackValidator().validateMappings(built.items(), mappings);
             AtomicFiles.writeBytes(workDir.resolve("mappings.json"), mappings);
-            AtomicFiles.writeBytes(workDir.resolve("glyph-map.json"), glyphMap);
 
             if (closed) {
                 AtomicFiles.deleteTree(workDir);
@@ -287,8 +276,6 @@ public final class ConversionService {
 
             GeyserDeployer.DeployResult deployed = deployer.deploy(config,
                     built.mcpackPath(), mappings, Time.fileSafeNow());
-            AtomicFiles.writeBytes(plugin.getDataFolder().toPath().resolve("glyph-map.json"), glyphMap);
-            publishGlyphMap(built.glyphRewrites());
 
             Map<String, String> outputs = new LinkedHashMap<>();
             outputs.put("pack", deployed.packPath().toString());
@@ -305,7 +292,7 @@ public final class ConversionService {
             Report finalReport = baseReport.withOutputs(outputs);
             try {
                 cache.store(cacheKey, pack.sourceHash(), fingerprint, built.mcpackPath(),
-                        mappings, glyphMap, finalReport);
+                        mappings, finalReport);
             } catch (Exception exception) {
                 // O deploy ja aconteceu; uma falha de cache nao deve
                 // transformar uma conversao publicada em erro.
@@ -344,12 +331,8 @@ public final class ConversionService {
     private ConversionResult deployCached(PluginConfig config, PackCache.Entry cached,
                                           long started) throws IOException {
         byte[] mappings = Files.readAllBytes(cached.mappings());
-        Map<String, String> glyphMap = GlyphTextMap.decode(Files.readAllBytes(cached.glyphMap()));
         GeyserDeployer.DeployResult deployed = deployer.deploy(config, cached.mcpack(),
                 mappings, Time.fileSafeNow());
-        AtomicFiles.writeBytes(plugin.getDataFolder().toPath().resolve("glyph-map.json"),
-                GlyphTextMap.encode(glyphMap));
-        publishGlyphMap(glyphMap);
 
         Map<String, String> outputs = new LinkedHashMap<>();
         outputs.put("pack", deployed.packPath().toString());
@@ -368,12 +351,6 @@ public final class ConversionService {
                 + report.stats().threeD() + " 3D).";
         return new ConversionResult(true, true, message, report, deployed.packPath(),
                 deployed.mappingsPath(), deployed.backupDir(), elapsedMs(started));
-    }
-
-    private void publishGlyphMap(Map<String, String> glyphMap) {
-        if (plugin instanceof dev.nexobedrock.NexoBedrockPlugin nexoPlugin) {
-            nexoPlugin.setGlyphTextMap(glyphMap);
-        }
     }
 
     private PackSource chooseSource(PluginConfig config) {

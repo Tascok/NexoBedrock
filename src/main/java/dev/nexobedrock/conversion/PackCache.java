@@ -2,7 +2,6 @@ package dev.nexobedrock.conversion;
 
 import com.google.gson.JsonObject;
 import dev.nexobedrock.report.Report;
-import dev.nexobedrock.bedrock.GlyphTextMap;
 import dev.nexobedrock.util.AtomicFiles;
 import dev.nexobedrock.util.Hashing;
 import dev.nexobedrock.util.Json;
@@ -17,7 +16,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -33,7 +31,6 @@ public final class PackCache {
             Path directory,
             Path mcpack,
             Path mappings,
-            Path glyphMap,
             Path reportPath,
             Report report,
             long sizeBytes
@@ -65,19 +62,16 @@ public final class PackCache {
             JsonObject meta = Json.readObject(metaPath);
             String packName = string(meta, "pack", "pack.mcpack");
             String mappingsName = string(meta, "mappings", "mappings.json");
-            String glyphMapName = string(meta, "glyphMap", "glyph-map.json");
             String reportName = string(meta, "report", "report.json");
 
             Path pack = directory.resolve(packName).normalize();
             Path mappings = directory.resolve(mappingsName).normalize();
-            Path glyphMap = directory.resolve(glyphMapName).normalize();
             Path reportPath = directory.resolve(reportName).normalize();
             if (!pack.startsWith(directory) || !mappings.startsWith(directory)
-                    || !glyphMap.startsWith(directory) || !reportPath.startsWith(directory)) {
+                    || !reportPath.startsWith(directory)) {
                 return null;
             }
             if (!Files.isRegularFile(pack) || !Files.isRegularFile(mappings)
-                    || !Files.isRegularFile(glyphMap)
                     || !Files.isRegularFile(reportPath)) {
                 return null;
             }
@@ -90,7 +84,7 @@ public final class PackCache {
                 return null;
             }
             long size = Files.size(pack);
-            return new Entry(key, directory, pack, mappings, glyphMap, reportPath, report, size);
+            return new Entry(key, directory, pack, mappings, reportPath, report, size);
         } catch (Exception exception) {
             logger.warning("NexoBedrock: cache invalido para " + key + ": "
                     + exception.getMessage());
@@ -100,11 +94,6 @@ public final class PackCache {
 
     public Entry store(String key, String sourceHash, String fingerprint, Path mcpack,
                        byte[] mappings, Report report) throws IOException {
-        return store(key, sourceHash, fingerprint, mcpack, mappings, GlyphTextMap.encode(Map.of()), report);
-    }
-
-    public Entry store(String key, String sourceHash, String fingerprint, Path mcpack,
-                       byte[] mappings, byte[] glyphMap, Report report) throws IOException {
         Files.createDirectories(root);
         Path temp = root.resolve("." + key + ".tmp-" + UUID.randomUUID());
         Path target = root.resolve(key);
@@ -113,7 +102,6 @@ public final class PackCache {
             Files.createDirectories(temp);
             AtomicFiles.copy(mcpack, temp.resolve("pack.mcpack"));
             AtomicFiles.writeBytes(temp.resolve("mappings.json"), mappings);
-            AtomicFiles.writeBytes(temp.resolve("glyph-map.json"), glyphMap);
             AtomicFiles.writeBytes(temp.resolve("report.json"),
                     Json.prettyBytes(Json.prettyGson().toJsonTree(report)));
 
@@ -124,7 +112,6 @@ public final class PackCache {
             meta.addProperty("createdAt", Time.isoNow());
             meta.addProperty("pack", "pack.mcpack");
             meta.addProperty("mappings", "mappings.json");
-            meta.addProperty("glyphMap", "glyph-map.json");
             meta.addProperty("report", "report.json");
             meta.addProperty("sizeBytes", Files.size(temp.resolve("pack.mcpack")));
             AtomicFiles.writeBytes(temp.resolve("meta.json"), Json.prettyBytes(meta));

@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
-import java.util.concurrent.ConcurrentHashMap;
 
 /** Provides per-Bedrock-player armor-stand renderings for FancyHolograms text holograms. */
 public final class FancyHologramBedrockBridge {
@@ -36,8 +35,6 @@ public final class FancyHologramBedrockBridge {
     private final String bedrockNamePrefix;
     private final Map<Key, List<ArmorStand>> renderings = new HashMap<>();
     private final Map<UUID, Set<UUID>> hiddenDisplays = new HashMap<>();
-    private final Set<String> missingGlyphWarnings = ConcurrentHashMap.newKeySet();
-    private volatile Map<String, String> glyphRewrites = Map.of();
     private BukkitTask task;
     private boolean enabled;
 
@@ -67,50 +64,6 @@ public final class FancyHologramBedrockBridge {
 
     public boolean isEnabled() {
         return enabled;
-    }
-
-    public void setGlyphRewrites(Map<String, String> glyphRewrites) {
-        this.glyphRewrites = glyphRewrites == null ? Map.of() : Map.copyOf(glyphRewrites);
-        missingGlyphWarnings.clear();
-    }
-
-    /** Captures stable FancyHolograms lines on the server thread for the next Bedrock pack build. */
-    public List<String> snapshotGlyphInputs() {
-        if (!enabled || !Bukkit.getPluginManager().isPluginEnabled("FancyHolograms")) return List.of();
-        try {
-            Object manager = hologramManager();
-            if (manager == null) return List.of();
-            Class<?> managerApi = Class.forName("de.oliver.fancyholograms.api.HologramManager",
-                    true, manager.getClass().getClassLoader());
-            Object result = managerApi.getMethod("getHolograms").invoke(manager);
-            if (!(result instanceof Iterable<?> holograms)) return List.of();
-
-            List<String> glyphInputs = new ArrayList<>();
-            for (Object hologram : holograms) {
-                ClassLoader loader = hologram.getClass().getClassLoader();
-                Class<?> hologramApi = Class.forName("de.oliver.fancyholograms.api.hologram.Hologram",
-                        true, loader);
-                Object data = hologramApi.getMethod("getData").invoke(hologram);
-                if (data == null || !data.getClass().getSimpleName().equals("TextHologramData")) continue;
-                Class<?> textDataApi = Class.forName("de.oliver.fancyholograms.api.data.TextHologramData",
-                        true, loader);
-                Object rawLines = textDataApi.getMethod("getText").invoke(data);
-                if (!(rawLines instanceof Iterable<?> lines)) continue;
-                for (Object rawLine : lines) {
-                    String value = String.valueOf(rawLine);
-                    Component component = value.indexOf('\u00a7') >= 0
-                            ? LEGACY.deserialize(value)
-                            : MiniMessage.miniMessage().deserialize(value);
-                    String formatted = LEGACY.serialize(component);
-                    if (!formatted.isBlank()) glyphInputs.add(formatted);
-                }
-            }
-            return List.copyOf(glyphInputs);
-        } catch (ReflectiveOperationException | RuntimeException exception) {
-            plugin.getLogger().log(Level.WARNING,
-                    "Nao foi possivel incluir textos do FancyHolograms no pack Bedrock.", exception);
-            return List.of();
-        }
     }
 
     public void close() {
@@ -232,18 +185,7 @@ public final class FancyHologramBedrockBridge {
         String legacy = LEGACY.serialize(component);
         String[] rawLines = legacy.split("\\n", -1);
         List<Component> lines = new ArrayList<>(rawLines.length);
-        for (String line : rawLines) {
-            String glyphs = glyphRewrites.get(line);
-            if (glyphs != null) {
-                lines.add(Component.text(glyphs));
-            } else {
-                if (line.indexOf('\u00a7') >= 0 && missingGlyphWarnings.add(line)) {
-                    plugin.getLogger().warning("Texto de holograma ausente no atlas Bedrock; "
-                            + "rode /nexobedrock convert --force para atualizar o pack.");
-                }
-                lines.add(LEGACY.deserialize(line));
-            }
-        }
+        for (String line : rawLines) lines.add(LEGACY.deserialize(line));
         return lines;
     }
 
