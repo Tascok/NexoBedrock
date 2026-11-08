@@ -48,5 +48,6 @@ class NexoItemAppearanceIndexTest {
         assertEquals("minecraft:textures/emojis/emote_right",
                 resolver.resolve(pack, "emojis/emote_right"));
         assertNull(resolver.resolve(pack, "duplicate"));
+        assertNull(resolver.resolve(pack, "missing:emojis/emote_right"));
     }
 }

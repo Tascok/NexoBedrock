@@ -15,7 +15,8 @@ depois de gerar os arquivos necessários e validar o comportamento em Bedrock.
   `nexobedrock/furniture-catalog.json`. O catálogo declara `runtime_ready: false`:
   é preparação de assets, não sincronização de instâncias.
 - O pack inclui uma definição `entity/*.entity.json` para cada furniture 3D e
-  `nexobedrock/furniture-mappings.properties` com índices determinísticos por ID.
+  `nexobedrock/furniture-mappings.properties` com índices derivados do ID estável,
+  sem renumerar os demais ao adicionar ou remover itens. Colisões são rejeitadas.
   A extensão Geyser agora lê esses índices (copiados para sua pasta de dados),
   registra as definições e reconhece UUIDs sintéticos marcados `NEXO` no evento
   de spawn. O protocolo de UUID preserva um identificador único de instância e
@@ -195,6 +196,10 @@ Nexo antes de declarar compatibilidade ampla.
   com a versão e reconexão de clientes Bedrock.
 - Em Geyser de proxy/Standalone, os outputs precisam ser sincronizados ao
   destino remoto; caminhos locais configurados no Paper não bastam.
+- O catálogo de furniture do Paper, o pack e os dois mappings do proxy devem vir
+  da mesma conversão. Na primeira atualização de índices sequenciais para índices
+  estáveis, versões desencontradas não reconhecem os móveis; ainda é obrigatório
+  publicar os arquivos em conjunto, reiniciar o Geyser e reconectar os clientes.
 - O deploy deve publicar pack, mappings e artefatos de runtime como uma unidade
   versionada, mantendo backups e verificando hashes/logs após reiniciar.
 

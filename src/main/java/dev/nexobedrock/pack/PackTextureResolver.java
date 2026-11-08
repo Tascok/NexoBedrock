@@ -17,9 +17,13 @@ public final class PackTextureResolver {
         if (referencePath.startsWith("textures/")) {
             referencePath = referencePath.substring("textures/".length());
         }
+        String direct = Names.namespaceOf(normalized) + ":" + referencePath;
+        if (pack.texture(direct) != null) return direct;
         String suffix = "/" + referencePath.toLowerCase(java.util.Locale.ROOT);
         List<String> candidates = new ArrayList<>();
         for (String key : pack.textures().keySet()) {
+            if (rawReference.contains(":") && !Names.namespaceOf(key)
+                    .equals(Names.namespaceOf(normalized))) continue;
             String path = Names.pathOf(key).toLowerCase(java.util.Locale.ROOT);
             if (path.endsWith(suffix)) candidates.add(key);
         }
@@ -28,6 +32,8 @@ public final class PackTextureResolver {
                     .toLowerCase(java.util.Locale.ROOT);
             if (filename.endsWith(".png")) filename = filename.substring(0, filename.length() - 4);
             for (String key : pack.textures().keySet()) {
+                if (rawReference.contains(":") && !Names.namespaceOf(key)
+                        .equals(Names.namespaceOf(normalized))) continue;
                 String path = Names.pathOf(key).toLowerCase(java.util.Locale.ROOT);
                 String stem = path.substring(path.lastIndexOf('/') + 1);
                 if (stem.endsWith(".png")) stem = stem.substring(0, stem.length() - 4);
@@ -42,8 +48,10 @@ public final class PackTextureResolver {
         if (preferred.size() > 1) {
             preferred = preferred.stream().sorted(Comparator.naturalOrder()).toList();
             // Never choose arbitrarily between different images with the same basename.
-            if (!java.util.Arrays.equals(pack.texture(preferred.get(0)),
-                    pack.texture(preferred.get(1)))) return null;
+            for (int i = 1; i < preferred.size(); i++) {
+                if (!java.util.Arrays.equals(pack.texture(preferred.get(0)),
+                        pack.texture(preferred.get(i)))) return null;
+            }
         }
         return preferred.getFirst();
     }

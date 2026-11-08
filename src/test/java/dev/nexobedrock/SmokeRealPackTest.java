@@ -171,7 +171,8 @@ class SmokeRealPackTest {
             String runtimeMap = new String(generated.getInputStream(generated.getEntry(
                     "nexobedrock/furniture-mappings.properties")).readAllBytes(),
                     java.nio.charset.StandardCharsets.UTF_8);
-            assertTrue(runtimeMap.contains("0=nexobedrock:smoke_furniture"));
+            assertTrue(runtimeMap.contains(entry.get("model_index").getAsInt()
+                    + "=nexobedrock:smoke_furniture"));
         }
         JavaItemEntry crossbow = indexed.entries().stream()
                 .filter(item -> "minecraft:crossbow".equals(item.javaItem()))

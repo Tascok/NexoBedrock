@@ -141,7 +141,12 @@ public final class FurnitureProxyBridge implements Listener, AutoCloseable {
                     rewriteProxySpawn(event);
                     return;
                 }
-                filterProxyUpdate(event);
+                try {
+                    filterProxyUpdate(event);
+                } catch (RuntimeException exception) {
+                    plugin.getLogger().log(Level.FINE,
+                            "Could not inspect proxy update packet " + event.getPacketType(), exception);
+                }
             }
         };
         ProtocolLibrary.getProtocolManager().addPacketListener(packetListener);
