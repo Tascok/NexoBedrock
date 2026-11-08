@@ -27,9 +27,9 @@ public final class GeometryWriter {
 
     public JsonObject write(String geometryId, ResolvedModel model, AtlasResult atlas) {
         JsonArray bones = new JsonArray();
-        bones.add(bone("root", null, new float[]{0f, 8f, 0f}, null, null, BINDING));
-        bones.add(bone("root_x", "root", new float[]{0f, 8f, 0f}, null, null, null));
-        bones.add(bone("root_y", "root_x", new float[]{0f, 8f, 0f}, null, null, null));
+        bones.add(bone("root", null, new float[]{0f, 0f, 0f}, null, null, BINDING));
+        bones.add(bone("root_x", "root", new float[]{0f, 0f, 0f}, null, null, null));
+        bones.add(bone("root_y", "root_x", new float[]{0f, 0f, 0f}, null, null, null));
 
         JsonArray unrotated = new JsonArray();
         Map<String, RotatedGroup> rotated = new LinkedHashMap<>();
@@ -59,7 +59,7 @@ public final class GeometryWriter {
             }
             String key = axis + "|" + angle + "|" + round(origin[0]) + "|"
                     + round(origin[1]) + "|" + round(origin[2]);
-            float[] pivot = new float[]{8f - origin[0], origin[1], origin[2] - 8f};
+            float[] pivot = new float[]{8f - origin[0], origin[1] - 8f, origin[2] - 8f};
             float[] boneRotation = switch (axis) {
                 case "x" -> new float[]{-angle, 0f, 0f};
                 case "y" -> new float[]{0f, -angle, 0f};
@@ -70,7 +70,7 @@ public final class GeometryWriter {
             group.cubes().add(cube);
         }
 
-        bones.add(bone("root_z", "root_y", new float[]{0f, 8f, 0f}, null,
+        bones.add(bone("root_z", "root_y", new float[]{0f, 0f, 0f}, null,
                 unrotated.isEmpty() ? null : unrotated, null));
 
         int rotationIndex = 1;
@@ -139,7 +139,7 @@ public final class GeometryWriter {
         }
 
         JsonObject cube = new JsonObject();
-        cube.add("origin", array(8f - maxX, minY, minZ - 8f));
+        cube.add("origin", array(8f - maxX, minY - 8f, minZ - 8f));
         cube.add("size", array(sizeX, sizeY, sizeZ));
         cube.add("uv", uv);
         return cube;

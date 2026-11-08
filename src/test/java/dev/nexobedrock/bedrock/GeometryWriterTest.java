@@ -33,7 +33,7 @@ class GeometryWriterTest {
         JsonObject cube = bone(bones, "root_z").getAsJsonArray("cubes")
                 .get(0).getAsJsonObject();
 
-        assertArray(cube.getAsJsonArray("origin"), -6f, 3f, -1.005f);
+        assertArray(cube.getAsJsonArray("origin"), -6f, -5f, -1.005f);
         assertArray(cube.getAsJsonArray("size"), 12f, 10f, 0.01f);
     }
 
@@ -70,16 +70,16 @@ class GeometryWriterTest {
         JsonArray rootCubes = rootZ.getAsJsonArray("cubes");
         assertEquals(1, rootCubes.size());
         JsonObject cube = rootCubes.get(0).getAsJsonObject();
-        assertArray(cube.getAsJsonArray("origin"), 4f, 0f, -8f);
+        assertArray(cube.getAsJsonArray("origin"), 4f, -8f, -8f);
         assertArray(cube.getAsJsonArray("size"), 4f, 4f, 4f);
 
         JsonObject rotated = bone(bones, "rot_1");
         assertNotNull(rotated);
         assertEquals("root_z", rotated.get("parent").getAsString());
-        assertArray(rotated.getAsJsonArray("pivot"), 2f, 2f, -2f);
+        assertArray(rotated.getAsJsonArray("pivot"), 2f, -6f, -2f);
         assertArray(rotated.getAsJsonArray("rotation"), 0f, -90f, 0f);
         JsonObject rotatedCube = rotated.getAsJsonArray("cubes").get(0).getAsJsonObject();
-        assertArray(rotatedCube.getAsJsonArray("origin"), 0f, 0f, -4f);
+        assertArray(rotatedCube.getAsJsonArray("origin"), 0f, -8f, -4f);
     }
 
     private JsonObject bone(JsonArray bones, String name) {
