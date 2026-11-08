@@ -48,12 +48,11 @@ public final class NexoBedrockPlugin extends JavaPlugin {
                     + throwable.getClass().getSimpleName() + ": " + throwable.getMessage());
         }
 
-        if (config.get().bedrockTextFormatting()
-                && config.get().bedrockTextMode() == BedrockTextMode.LEGACY
-                && getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
+        if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
             String prefix = getConfig().getString("holograms.bedrock-name-prefix", ".");
-            new BedrockItemNamePacketListener(this, prefix).register();
-            getLogger().info("Nomes RGB dos itens por pacote ativos para jogadores com prefixo Floodgate '"
+            new BedrockItemNamePacketListener(this, prefix, config.get().bedrockTextFormatting()
+                    && config.get().bedrockTextMode() == BedrockTextMode.LEGACY).register();
+            getLogger().info("Glyphs e nomes dos itens por pacote ativos para jogadores com prefixo Floodgate '"
                     + prefix + "'.");
         } else if (!getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
             getLogger().warning("ProtocolLib nao encontrado; reescrita RGB dos nomes de itens desativada.");

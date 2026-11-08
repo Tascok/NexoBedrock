@@ -8,6 +8,8 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.Pair;
 import dev.nexobedrock.NexoBedrockPlugin;
+import dev.nexobedrock.bedrock.GlyphComponentRewriter;
+import dev.nexobedrock.bedrock.GlyphMappings;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.inventory.ItemStack;
@@ -16,6 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.Map;
 
 /** Rewrites inventory/equipment display names only for Floodgate clients. */
 public final class BedrockItemNamePacketListener {
@@ -24,10 +27,16 @@ public final class BedrockItemNamePacketListener {
 
     private final NexoBedrockPlugin plugin;
     private final String bedrockNamePrefix;
+    private final boolean rgbEnabled;
+    private final GlyphMappings glyphMappings;
+    private final GlyphComponentRewriter glyphRewriter = new GlyphComponentRewriter();
 
-    public BedrockItemNamePacketListener(NexoBedrockPlugin plugin, String bedrockNamePrefix) {
+    public BedrockItemNamePacketListener(NexoBedrockPlugin plugin, String bedrockNamePrefix,
+                                         boolean rgbEnabled) {
         this.plugin = plugin;
         this.bedrockNamePrefix = bedrockNamePrefix;
+        this.rgbEnabled = rgbEnabled;
+        this.glyphMappings = new GlyphMappings(plugin);
     }
 
     public void register() {
@@ -102,10 +111,40 @@ public final class BedrockItemNamePacketListener {
         if (original == null || original.getType().isAir() || !original.hasItemMeta()) return null;
         ItemStack copy = original.clone();
         ItemMeta meta = copy.getItemMeta();
-        if (meta == null || meta.displayName() == null) return null;
-        String rgb = HEX.serialize(meta.displayName());
-        if (!rgb.contains("\u00a7x")) return null;
-        meta.displayName(Component.text(rgb));
+        if (meta == null) return null;
+        Map<String, Integer> mappings = glyphMappings.get();
+        boolean changed = false;
+        Component name = meta.displayName();
+        if (name != null) {
+            Component rewritten = glyphRewriter.rewrite(name, mappings);
+            if (rgbEnabled) {
+                String rgb = HEX.serialize(rewritten);
+                if (rgb.contains("\u00a7x")) rewritten = Component.text(rgb);
+            }
+            if (!rewritten.equals(name)) {
+                meta.displayName(rewritten);
+                changed = true;
+            }
+        }
+        Component itemName = meta.itemName();
+        if (itemName != null) {
+            Component rewritten = glyphRewriter.rewrite(itemName, mappings);
+            if (!rewritten.equals(itemName)) {
+                meta.itemName(rewritten);
+                changed = true;
+            }
+        }
+        List<Component> lore = meta.lore();
+        if (lore != null) {
+            List<Component> rewritten = new ArrayList<>(lore.size());
+            for (Component line : lore) {
+                Component result = glyphRewriter.rewrite(line, mappings);
+                rewritten.add(result);
+                if (!result.equals(line)) changed = true;
+            }
+            if (!rewritten.equals(lore)) meta.lore(rewritten);
+        }
+        if (!changed) return null;
         copy.setItemMeta(meta);
         return copy;
     }

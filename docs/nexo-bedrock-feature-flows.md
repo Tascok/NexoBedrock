@@ -45,6 +45,9 @@ depois de gerar os arquivos necessários e validar o comportamento em Bedrock.
   conter fontes de uma geração anterior; execute nova conversão após a geração.
   O remapeamento também é aplicado a mensagens de sistema, action bar e títulos
   enviados em componentes; chat assinado de jogadores não é modificado.
+- Para os pacotes de inventário e equipamento, nomes e lore dos itens são
+  remapeados em uma cópia enviada ao jogador Bedrock; os itens reais do servidor
+  permanecem inalterados. Isso também cobre tags escritas diretamente em Unicode.
 - O smoke test executado contra o pack real do servidor converteu 99 glyphs para
   16 folhas quadradas e incluiu o mapa de codepoints; nenhum Bedrock client foi
   conectado para validação visual, portanto alinhamento e nitidez ainda precisam
@@ -163,6 +166,11 @@ pela existência de PNGs no pack, e Bedrock não oferece um override genérico p
 telas customizadas enviadas pelo servidor Java. Esses layouts precisam de uma
 integração/runtime de GUI específico; screens hardcoded do cliente Bedrock
 continuam fora do alcance de um resource pack genérico.
+
+O fundo em título Java não pode simplesmente ser exibido como caractere no
+Bedrock: para aproximar a tela é necessário produzir um overlay JSON-UI no
+container, condicionado ao título, e considerar a versão e o modo de interface
+do cliente. O remapeamento de Unicode sozinho não implementa esse overlay.
 
 **Limites confirmados:** glyphs Bedrock são desenhados no tamanho baked, então
 escala e nitidez estão ligadas; alguns casos exigem escala/altura/supersampling.
