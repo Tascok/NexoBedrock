@@ -23,4 +23,23 @@ class GlyphTextRewriterTest {
         assertEquals(" \uF100", result.getAsJsonObject().getAsJsonArray("extra")
                 .get(0).getAsJsonObject().get("text").getAsString());
     }
+
+    @Test
+    void sharedSourceCodepointUsesComponentFont() {
+        var component = JsonParser.parseString("""
+                {"text":"\\uA410","font":"nexo:default","extra":[
+                  {"text":"\\uA410","font":"other:default"},
+                  {"text":"\\uA410","font":"minecraft:default"}]}
+                """);
+
+        var result = new GlyphTextRewriter().rewriteByFont(component, Map.of(
+                "nexo:default:A410", 0xE200,
+                "other:default:A410", 0xE201));
+
+        assertEquals("\uE200", result.getAsJsonObject().get("text").getAsString());
+        assertEquals("\uE201", result.getAsJsonObject().getAsJsonArray("extra")
+                .get(0).getAsJsonObject().get("text").getAsString());
+        assertEquals("\uA410", result.getAsJsonObject().getAsJsonArray("extra")
+                .get(1).getAsJsonObject().get("text").getAsString());
+    }
 }

@@ -16,7 +16,7 @@ import java.util.zip.ZipFile;
 public final class GlyphMapLoader {
     private static final String ENTRY = "nexobedrock/glyph-map.json";
 
-    public Map<Integer, Integer> load(Path mcpack) throws IOException {
+    public Map<String, Integer> load(Path mcpack) throws IOException {
         if (!Files.isRegularFile(mcpack)) return Map.of();
         try (ZipFile zip = new ZipFile(mcpack.toFile())) {
             var entry = zip.getEntry(ENTRY);
@@ -26,14 +26,14 @@ public final class GlyphMapLoader {
                     .getAsJsonObject();
             JsonObject glyphs = root.getAsJsonObject("glyphs");
             if (glyphs == null) return Map.of();
-            Map<Integer, Integer> result = new LinkedHashMap<>();
+            Map<String, Integer> result = new LinkedHashMap<>();
             for (Map.Entry<String, JsonElement> mapping : glyphs.entrySet()) {
                 int separator = mapping.getKey().lastIndexOf(':');
                 if (separator < 0 || !mapping.getValue().isJsonPrimitive()) continue;
                 try {
-                    int source = Integer.parseInt(mapping.getKey().substring(separator + 1), 16);
+                    Integer.parseInt(mapping.getKey().substring(separator + 1), 16);
                     int target = Integer.parseInt(mapping.getValue().getAsString(), 16);
-                    result.putIfAbsent(source, target);
+                    result.putIfAbsent(mapping.getKey(), target);
                 } catch (NumberFormatException ignored) {
                     // Ignore corrupt individual entries; other glyph mappings remain usable.
                 }

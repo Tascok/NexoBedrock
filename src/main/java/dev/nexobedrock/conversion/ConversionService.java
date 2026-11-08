@@ -14,6 +14,8 @@ import dev.nexobedrock.pack.ModelEngineAssetReader;
 import dev.nexobedrock.pack.PackItemDefinitionParser;
 import dev.nexobedrock.pack.PackSource;
 import dev.nexobedrock.pack.PackSourceKind;
+import dev.nexobedrock.pack.NexoItemConfigIndex;
+import dev.nexobedrock.pack.PackTextureResolver;
 import dev.nexobedrock.report.Report;
 import dev.nexobedrock.report.ReportWriter;
 import dev.nexobedrock.report.Stats;
@@ -121,10 +123,13 @@ public final class ConversionService {
         }
 
         NexoItemIndex snapshot = nexoIndex;
+        org.bukkit.plugin.Plugin nexoPlugin = Bukkit.getPluginManager().getPlugin("Nexo");
+        Path nexoItemsFolder = nexoPlugin == null ? null
+                : nexoPlugin.getDataFolder().toPath().resolve("items");
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             ConversionResult result;
             try {
-                result = run(request, snapshot);
+                result = run(request, snapshot, nexoItemsFolder);
             } catch (Throwable throwable) {
                 logger.severe("NexoBedrock: conversao falhou: " + throwable);
                 result = ConversionResult.failure("Erro inesperado: "
@@ -153,7 +158,8 @@ public final class ConversionService {
         }
     }
 
-    private ConversionResult run(ConversionRequest request, NexoItemIndex nexoIndex) {
+    private ConversionResult run(ConversionRequest request, NexoItemIndex nexoIndex,
+                                 Path nexoItemsFolder) {
         long started = System.nanoTime();
         if (closed) {
             return ConversionResult.failure("Plugin desabilitado durante a conversao.",
@@ -194,8 +200,31 @@ public final class ConversionService {
             ItemIndexBuilder.Result indexed = indexBuilder.build(nexoIndex, packEntries,
                     config, source.kind() == PackSourceKind.ZIP);
             List<JavaItemEntry> entries = indexed.entries();
-            Path nexoItems = plugin.getDataFolder().toPath().getParent().resolve("Nexo/items");
+            Path nexoItems = nexoItemsFolder == null
+                    ? plugin.getDataFolder().toPath().getParent().resolve("Nexo/items")
+                    : nexoItemsFolder;
             Map<String, NexoArmorIndex.Armor> armor = new NexoArmorIndex().read(nexoItems);
+            Map<String, String> textureReferences = new NexoItemConfigIndex()
+                    .readTextureReferences(nexoItems);
+            PackTextureResolver textureResolver = new PackTextureResolver();
+            List<String> appearanceWarnings = new ArrayList<>();
+            List<JavaItemEntry> withIcons = new ArrayList<>(entries.size());
+            for (JavaItemEntry entry : entries) {
+                String reference = textureReferences.get(entry.id());
+                if (reference == null) {
+                    withIcons.add(entry);
+                    continue;
+                }
+                String texture = textureResolver.resolve(pack, reference);
+                if (texture == null) {
+                    appearanceWarnings.add("Textura Pack.texture não encontrada ou ambígua para "
+                            + entry.id() + ": " + reference);
+                    withIcons.add(entry);
+                } else {
+                    withIcons.add(entry.withIconTexture(texture));
+                }
+            }
+            entries = List.copyOf(withIcons);
 
             if (entries.isEmpty() && modelEngine.assets().isEmpty()) {
                 Report report = report(config, request, pack.source(), pack.sourceHash(),
@@ -214,12 +243,18 @@ public final class ConversionService {
             String armorFingerprint = Hashing.sha256Hex(
                     armor.entrySet().stream().sorted(Map.Entry.comparingByKey()).toList()
                             .toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            String appearanceFingerprint = Hashing.sha256Hex(textureReferences.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .map(entry -> entry.getKey() + "=" + entry.getValue())
+                    .reduce("", (left, right) -> left + "\n" + right)
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8));
             String modelEngineFingerprint = Hashing.sha256Hex(modelEngine.assets().stream()
                     .map(asset -> asset.id() + "|" + Hashing.sha256Hex(asset.texture()) + "|"
                             + asset.blueprint().elements() + "|" + asset.blueprint().animationData())
                     .reduce("", (left, right) -> left + "\n" + right));
             String cacheKey = cache.key(pack.sourceHash(),
-                    fingerprint + armorFingerprint + modelEngineFingerprint, pluginVersion);
+                    fingerprint + armorFingerprint + appearanceFingerprint
+                            + modelEngineFingerprint, pluginVersion);
             if (!request.force()) {
                 PackCache.Entry cached = cache.find(cacheKey);
                 if (cached != null) {
@@ -249,6 +284,7 @@ public final class ConversionService {
             List<String> warnings = new ArrayList<>();
             warnings.addAll(pack.warnings());
             warnings.addAll(indexed.warnings());
+            warnings.addAll(appearanceWarnings);
             warnings.addAll(built.warnings());
 
             Report baseReport = report(config, request, pack.source(), pack.sourceHash(),

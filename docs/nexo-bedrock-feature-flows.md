@@ -8,7 +8,8 @@ depois de gerar os arquivos necessários e validar o comportamento em Bedrock.
 ## Estado encontrado no NexoBedrock
 
 - O conversor lê modelos, definições de itens, fontes bitmap e PNGs do pack Java.
-  `NexoPackReader` ainda ignora blockstates, sons e texturas independentes de GUI.
+  `NexoPackReader` lê texturas em geral, mas não interpreta blockstates, sons ou
+  a semântica dos assets independentes de GUI.
 - `NexoItemIndex` consulta os itens via API pública do Nexo e marca a mechanic
   `furniture`; modelos resolvidos passam pelo conversor e são listados em
   `nexobedrock/furniture-catalog.json`. O catálogo declara `runtime_ready: false`:
@@ -22,14 +23,15 @@ depois de gerar os arquivos necessários e validar o comportamento em Bedrock.
 - O pack Bedrock atual gera `item_texture.json`, geometria/attachables de itens e
   mappings v2 do Geyser. Isso resolve a aparência do item, não a entidade que o
   Nexo coloca no mundo.
-- O leitor/conversor agora reconhece JSON de fonte com providers `bitmap`, cria
-  folhas Bedrock `font/glyph_E2.png`–`glyph_F8.png` com codepoints de saída e
-  registra o mapa fonte/codepoint em `nexobedrock/glyph-map.json` dentro do pack.
-  O listener Paper usa ProtocolLib para remapear texto `OPEN_WINDOW` de clientes
-  Bedrock com o prefixo configurado. Providers `space`/`reference` são avisados,
-  e ascent/avanço do Java não são reproduzidos precisamente. Para Geyser remoto,
-  o pack precisa estar acessível no caminho configurado no Paper; sincronização
-  automática da tabela para a extensão Geyser ainda não foi implementada.
+- O leitor/conversor reconhece providers `bitmap`, cria folhas Bedrock
+  `font/glyph_E2.png`–`glyph_F8.png` e grava os codepoints com chave composta por
+  fonte e codepoint em `nexobedrock/glyph-map.json`. O listener Paper usa
+  ProtocolLib para remapear texto `OPEN_WINDOW` de clientes Bedrock conforme a
+  fonte definida em cada componente; caracteres iguais em fontes distintas não
+  colidem. Providers `space`/`reference` são avisados, e ascent/avanço Java não
+  são reproduzidos precisamente. Para Geyser remoto, o pack precisa estar
+  acessível no caminho configurado no Paper; sincronização automática da tabela
+  para a extensão Geyser ainda não foi implementada.
 - O smoke test executado contra o pack real do servidor converteu 99 glyphs para
   16 folhas quadradas e incluiu o mapa de codepoints; nenhum Bedrock client foi
   conectado para validação visual, portanto alinhamento e nitidez ainda precisam
@@ -133,6 +135,22 @@ clips ativos na extensão Geyser. Não é validação visual em Bedrock.
 5. Tratar hopper/dropper/dispenser e outras telas hardcoded como limitações, não
    prometer skin quando o cliente Bedrock não oferece override compatível.
 
+**Implementado nesta revisão:** a conversão automática de fontes bitmap agora
+mantém o par fonte/codepoint no mapa e o rewrite de `OPEN_WINDOW` respeita a
+fonte em cada componente. Isso cobre glyphs de título/ícones de menu enviados
+como texto com `font` customizada, sem configuração de IDs de menu. Providers
+`bitmap` são migrados dos assets encontrados no pack; não é necessário cadastrar
+cada glyph manualmente.
+
+**Ainda não implementado:** não há leitura de configurações Nexo de GUI para
+descobrir backgrounds, slots, posições, ações ou layout. Também não há
+substituição global de texturas de tela vanilla/HUD. O conversor não consegue
+inferir de forma segura qual imagem decorativa pertence a qual inventário só
+pela existência de PNGs no pack, e Bedrock não oferece um override genérico para
+telas customizadas enviadas pelo servidor Java. Esses layouts precisam de uma
+integração/runtime de GUI específico; screens hardcoded do cliente Bedrock
+continuam fora do alcance de um resource pack genérico.
+
 **Limites confirmados:** glyphs Bedrock são desenhados no tamanho baked, então
 escala e nitidez estão ligadas; alguns casos exigem escala/altura/supersampling.
 Geyser em Velocity/Standalone precisa de Floodgate devidamente configurado para
@@ -147,7 +165,15 @@ Nexo antes de declarar compatibilidade ampla.
 
 - **Ícone do item Nexo:** PNG da textura do pack ou ícone renderizado do modelo;
   publicar em `textures/item_texture.json` e apontar `options.icon` no Geyser
-  mapping. Esse pipeline já existe para os itens que passam pelo conversor.
+  mapping. A conversão agora indexa recursivamente `Pack.texture` nos YAML sob a
+  pasta `items` descoberta pela API do plugin Nexo, resolve a referência contra
+  as texturas realmente presentes no pack e usa essa imagem como override do
+  ícone. Se modelo faltar/não resolver ou o modelo 3D não puder ser convertido,
+  o item ainda pode ser publicado como ícone 2D. Referências de basename
+  ambíguas sem correspondência exata são ignoradas com aviso, em vez de escolher
+  uma textura incorreta. `LEATHER_HORSE_ARMOR` não é considerado armadura por si
+  só, pois é usado como carrier de furniture; armaduras reais continuam
+  reconhecidas pelos slots e mecânicas Nexo.
 - **Ícone de GUI/menu:** glyph/font ou textura da GUI, seguindo o fluxo acima;
   não é o mesmo que o ícone do item no inventário criativo.
 - **Tags de colocação da furniture:** `block_tags`, `block_types` e `nexo_blocks`

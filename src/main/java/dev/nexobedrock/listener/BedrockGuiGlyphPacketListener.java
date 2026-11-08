@@ -25,7 +25,7 @@ import java.util.logging.Level;
 public final class BedrockGuiGlyphPacketListener {
     private final NexoBedrockPlugin plugin;
     private final String bedrockNamePrefix;
-    private final AtomicReference<Map<Integer, Integer>> glyphs = new AtomicReference<>(Map.of());
+    private final AtomicReference<Map<String, Integer>> glyphs = new AtomicReference<>(Map.of());
     private final GlyphMapLoader loader = new GlyphMapLoader();
     private final GlyphTextRewriter rewriter = new GlyphTextRewriter();
     private volatile long loadedModified = Long.MIN_VALUE;
@@ -41,7 +41,7 @@ public final class BedrockGuiGlyphPacketListener {
             @Override
             public void onPacketSending(PacketEvent event) {
                 if (!isBedrockPlayer(event.getPlayer().getName())) return;
-                Map<Integer, Integer> mappings = refreshMap();
+                Map<String, Integer> mappings = refreshMap();
                 if (mappings.isEmpty()) return;
                 var components = event.getPacket().getChatComponents();
                 for (int index = 0; index < components.size(); index++) {
@@ -49,7 +49,7 @@ public final class BedrockGuiGlyphPacketListener {
                     if (component == null) continue;
                     try {
                         JsonElement json = JsonParser.parseString(component.getJson());
-                        JsonElement rewritten = rewriter.rewrite(json, mappings);
+                        JsonElement rewritten = rewriter.rewriteByFont(json, mappings);
                         components.write(index,
                                 WrappedChatComponent.fromJson(rewritten.toString()));
                     } catch (RuntimeException exception) {
@@ -61,7 +61,7 @@ public final class BedrockGuiGlyphPacketListener {
         });
     }
 
-    private Map<Integer, Integer> refreshMap() {
+    private Map<String, Integer> refreshMap() {
         PluginConfig config = plugin.getPluginConfig();
         Path pack = PathUtil.resolve(plugin, config.geyserPacksFolder())
                 .resolve(config.packName() + ".mcpack");

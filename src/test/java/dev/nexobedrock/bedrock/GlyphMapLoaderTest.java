@@ -27,8 +27,9 @@ class GlyphMapLoaderTest {
             output.closeEntry();
         }
 
-        Map<Integer, Integer> mappings = new GlyphMapLoader().load(pack);
+        Map<String, Integer> mappings = new GlyphMapLoader().load(pack);
 
-        assertEquals(Map.of(0xA410, 0xE200, 0xA450, 0xF100), mappings);
+        assertEquals(Map.of("nexo:default:A410", 0xE200,
+                "minecraft:default:A450", 0xF100), mappings);
     }
 }

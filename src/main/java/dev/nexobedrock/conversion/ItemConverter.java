@@ -74,33 +74,60 @@ public final class ItemConverter {
         NexoArmorIndex.Armor armorInfo = armor.get(entry.id());
         if (armorInfo != null && armorInfo.slot().equals(NexoArmorIndex.slot(entry.javaItem()))) {
             try {
-                return armor(pack, entry, config, bedrockId, textures, armorInfo);
+                return armor(pack, entry, config, bedrockId, textures, armorInfo,
+                        configuredIcon(pack, entry));
             } catch (IOException exception) {
+                byte[] icon = configuredIcon(pack, entry);
+                if (icon != null) {
+                    return iconOnly(entry, config, bedrockId, icon, textures,
+                            List.of("Camada de armadura não convertida; Pack.texture importada como ícone 2D."));
+                }
                 return Outcome.failed(entry, "erro ao converter armadura: " + exception.getMessage());
             }
         }
         if (entry.hasFlag("armor") || isArmor(entry.javaItem())) {
             return Outcome.unsupported(entry, "armadura/elytra fora do escopo do MVP");
         }
+        byte[] iconOverride = configuredIcon(pack, entry);
         if (entry.modelPath() == null || entry.modelPath().isBlank()) {
+            if (iconOverride != null) {
+                return iconOnly(entry, config, bedrockId, iconOverride, textures,
+                        List.of("Pack.texture importada como ícone 2D; modelo de item ausente."));
+            }
             return Outcome.skipped(entry, "sem modelo associado");
         }
 
         String modelKey = Names.normalizeKey(entry.modelPath(), "minecraft");
         if (modelKey == null) {
+            if (iconOverride != null) {
+                return iconOnly(entry, config, bedrockId, iconOverride, textures,
+                        List.of("Pack.texture importada como ícone 2D; caminho de modelo inválido."));
+            }
             return Outcome.skipped(entry, "caminho de modelo invalido");
         }
         if (isBlockModel(pack, modelKey)) {
+            if (iconOverride != null) {
+                return iconOnly(entry, config, bedrockId, iconOverride, textures,
+                        List.of("Modelo de bloco não renderizado; Pack.texture importada como ícone."));
+            }
             return Outcome.unsupported(entry, "modelo de bloco fora do escopo do MVP");
         }
 
         ResolvedModel model = resolver.resolve(pack, modelKey);
         if (model == null) {
+            if (iconOverride != null) {
+                return iconOnly(entry, config, bedrockId, iconOverride, textures,
+                        List.of("Modelo não encontrado; Pack.texture importada como ícone 2D."));
+            }
             return Outcome.unsupported(entry, "modelo nao encontrado no pack: " + modelKey);
         }
 
         boolean threeD = model.hasElements();
         if (threeD && !config.include3d()) {
+            if (iconOverride != null) {
+                return iconOnly(entry, config, bedrockId, iconOverride, textures,
+                        List.of("Conversão 3D desabilitada; Pack.texture importada como ícone 2D."));
+            }
             return Outcome.skipped(entry, "modelo 3D desabilitado na configuracao");
         }
         if (!threeD && !config.include2d()) {
@@ -113,21 +140,30 @@ public final class ItemConverter {
 
         try {
             if (!threeD) {
-                return flat(pack, entry, model, config, bedrockId, iconKey, id, handheld, textures);
+                return flat(pack, entry, model, config, bedrockId, iconKey, id, handheld,
+                        textures, iconOverride);
             }
-            return threeD(pack, entry, model, config, bedrockId, iconKey, id, handheld, textures);
+            return threeD(pack, entry, model, config, bedrockId, iconKey, id, handheld,
+                    textures, iconOverride);
         } catch (Exception exception) {
+            if (iconOverride != null) {
+                return iconOnly(entry, config, bedrockId, iconOverride, textures,
+                        List.of("Modelo não convertido (" + exception.getMessage()
+                                + "); Pack.texture importada como ícone 2D."));
+            }
             return Outcome.failed(entry, "erro inesperado: " + exception.getMessage());
         }
     }
 
     private Outcome armor(JavaPack pack, JavaItemEntry entry, PluginConfig config,
                           String bedrockId, TextureStore textures,
-                          NexoArmorIndex.Armor armor) throws IOException {
+                          NexoArmorIndex.Armor armor, byte[] iconOverride) throws IOException {
         String modelKey = Names.normalizeKey(entry.modelPath(), "minecraft");
         ResolvedModel model = modelKey == null ? null : resolver.resolve(pack, modelKey);
         byte[] icon;
-        if (model != null && model.iconTexture() != null && !model.hasElements()) {
+        if (iconOverride != null) {
+            icon = iconOverride;
+        } else if (model != null && model.iconTexture() != null && !model.hasElements()) {
             icon = atlasBuilder.icon(pack, model, new ArrayList<>());
         } else {
             icon = pack.texture(armor.iconKey());
@@ -135,7 +171,13 @@ public final class ItemConverter {
         }
         String textureKey = new NexoArmorIndex().texture(pack, armor);
         byte[] layer = textureKey == null ? null : pack.texture(textureKey);
-        if (layer == null) return Outcome.unsupported(entry, "CustomArmor sem textura: " + armor.textureKey());
+        if (layer == null) {
+            if (iconOverride != null) {
+                return iconOnly(entry, config, bedrockId, iconOverride, textures,
+                        List.of("CustomArmor sem camada Bedrock; Pack.texture importada como ícone 2D."));
+            }
+            return Outcome.unsupported(entry, "CustomArmor sem textura: " + armor.textureKey());
+        }
         if (!config.include2d()) return Outcome.skipped(entry, "icone 2D desabilitado na configuracao");
         String id = Names.sanitizeId(Names.pathOf(bedrockId));
         String iconKey = Names.iconKey(Names.namespaceOf(bedrockId), id);
@@ -154,18 +196,18 @@ public final class ItemConverter {
 
     private Outcome flat(JavaPack pack, JavaItemEntry entry, ResolvedModel model,
                          PluginConfig config, String bedrockId, String iconKey, String id,
-                         boolean handheld, TextureStore textures) throws IOException {
+                         boolean handheld, TextureStore textures, byte[] iconOverride) throws IOException {
         String primary = model.iconTexture();
-        if (primary == null) {
+        if (primary == null && iconOverride == null) {
             return Outcome.unsupported(entry, "modelo sem textura principal");
         }
-        byte[] rawIcon = pack.texture(primary);
+        byte[] rawIcon = iconOverride == null ? pack.texture(primary) : iconOverride;
         if (rawIcon == null) {
             return Outcome.unsupported(entry, "textura nao encontrada: " + primary);
         }
 
         List<String> warnings = new ArrayList<>(model.warnings());
-        byte[] icon = atlasBuilder.icon(pack, model, warnings);
+        byte[] icon = iconOverride == null ? atlasBuilder.icon(pack, model, warnings) : iconOverride;
         String iconPath = textures.add(icon, "textures/nexobedrock/icons/" + id);
         ItemReport report = ItemReport.converted(entry.id(), entry.javaItem(),
                 entry.mode().name().toLowerCase(Locale.ROOT), entry.customModelData(),
@@ -179,22 +221,34 @@ public final class ItemConverter {
 
     private Outcome threeD(JavaPack pack, JavaItemEntry entry, ResolvedModel model,
                            PluginConfig config, String bedrockId, String iconKey, String id,
-                           boolean handheld, TextureStore textures) throws IOException {
+                           boolean handheld, TextureStore textures, byte[] iconOverride) throws IOException {
         AtlasResult atlas;
         try {
             atlas = atlasBuilder.build(pack, model, config);
         } catch (IllegalArgumentException exception) {
+            if (iconOverride != null) {
+                return iconOnly(entry, config, bedrockId, iconOverride, textures,
+                        List.of(exception.getMessage(), "Pack.texture importada como ícone 2D."));
+            }
             return Outcome.unsupported(entry, exception.getMessage());
         }
         if (atlas.uvs().isEmpty()) {
+            if (iconOverride != null) {
+                return iconOnly(entry, config, bedrockId, iconOverride, textures,
+                        List.of("Modelo 3D sem faces; Pack.texture importada como ícone 2D."));
+            }
             return Outcome.unsupported(entry, "modelo sem faces validas");
         }
         if (!atlasBuilder.hasVisiblePixel(atlas.png())) {
+            if (iconOverride != null) {
+                return iconOnly(entry, config, bedrockId, iconOverride, textures,
+                        List.of("Atlas sem pixels; Pack.texture importada como ícone 2D."));
+            }
             return Outcome.unsupported(entry, "atlas 3D sem pixels visiveis");
         }
 
         String atlasPath = textures.add(atlas.png(), "textures/nexobedrock/atlas/" + id);
-        byte[] icon = iconRenderer.render(model, atlas);
+        byte[] icon = iconOverride == null ? iconRenderer.render(model, atlas) : iconOverride;
         if (!atlasBuilder.hasVisiblePixel(icon)) {
             return Outcome.unsupported(entry, "modelo 3D sem icone GUI visivel");
         }
@@ -225,6 +279,29 @@ public final class ItemConverter {
                 geometryId, geometryPath, attachablePath, animationPath, icon,
                 geometry, attachable, animations, false, handheld, List.copyOf(warnings), extra),
                 report);
+    }
+
+    private Outcome iconOnly(JavaItemEntry entry, PluginConfig config, String bedrockId,
+                             byte[] icon, TextureStore textures, List<String> warnings) {
+        if (!config.include2d()) return Outcome.skipped(entry, "ícone 2D desabilitado");
+        try {
+            String id = Names.sanitizeId(Names.pathOf(bedrockId));
+            String iconKey = Names.iconKey(Names.namespaceOf(bedrockId), id);
+            String iconPath = textures.add(icon, "textures/nexobedrock/icons/" + id);
+            ItemReport report = ItemReport.converted(entry.id(), entry.javaItem(),
+                    entry.mode().name().toLowerCase(Locale.ROOT), entry.customModelData(),
+                    entry.itemModel(), entry.modelPath(), bedrockId, "flat", iconKey,
+                    null, null, iconPath, warnings);
+            return new Outcome(new ConvertedItem(entry, bedrockId, iconKey, iconPath, null,
+                    null, null, null, null, icon, null, null, null, true, false,
+                    List.copyOf(warnings)), report);
+        } catch (IOException exception) {
+            return Outcome.failed(entry, "erro ao importar ícone: " + exception.getMessage());
+        }
+    }
+
+    private byte[] configuredIcon(JavaPack pack, JavaItemEntry entry) {
+        return entry.iconTexture() == null ? null : pack.texture(entry.iconTexture());
     }
 
     private boolean handheld(JavaItemEntry entry, JavaPack pack, String modelKey,
@@ -274,7 +351,7 @@ public final class ItemConverter {
         String material = javaItem.toUpperCase(Locale.ROOT);
         return material.contains("HELMET") || material.contains("CHESTPLATE")
                 || material.contains("LEGGINGS") || material.contains("BOOTS")
-                || material.endsWith("_HORSE_ARMOR") || material.equals("ELYTRA")
+                || material.equals("ELYTRA")
                 || material.equals("TURTLE_HELMET") || material.equals("WOLF_ARMOR");
     }
 }

@@ -118,8 +118,8 @@ public final class ItemIndexBuilder {
 
     private JavaItemEntry copy(JavaItemEntry entry, MappingMode mode) {
         return new JavaItemEntry(entry.id(), entry.javaItem(), mode, entry.customModelData(),
-                entry.itemModel(), entry.modelPath(), entry.displayName(), entry.flags(),
-                entry.source());
+                entry.itemModel(), entry.modelPath(), entry.iconTexture(), entry.displayName(),
+                entry.flags(), entry.source());
     }
 
     private String mergeKey(JavaItemEntry entry) {

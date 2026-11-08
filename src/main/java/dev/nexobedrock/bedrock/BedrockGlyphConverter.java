@@ -38,6 +38,9 @@ public final class BedrockGlyphConverter {
     private record Glyph(String font, int sourceCodepoint, BufferedImage image) {
     }
 
+    private record SourceGlyph(String font, int codepoint) {
+    }
+
     private record Dimensions(int width, int height) {
     }
 
@@ -62,12 +65,13 @@ public final class BedrockGlyphConverter {
         glyphs.sort(Comparator.comparing(Glyph::font)
                 .thenComparingInt(Glyph::sourceCodepoint));
 
-        Map<Integer, Glyph> bySource = new LinkedHashMap<>();
+        Map<SourceGlyph, Glyph> bySource = new LinkedHashMap<>();
         for (Glyph glyph : glyphs) {
-            Glyph existing = bySource.putIfAbsent(glyph.sourceCodepoint(), glyph);
+            SourceGlyph key = new SourceGlyph(glyph.font(), glyph.sourceCodepoint());
+            Glyph existing = bySource.putIfAbsent(key, glyph);
             if (existing != null && !samePixels(existing.image(), glyph.image())) {
-                warnings.add("Codepoint U+%04X tem imagens conflitantes em %s e %s; "
-                        .formatted(glyph.sourceCodepoint(), existing.font(), glyph.font()));
+                warnings.add("Codepoint U+%04X tem imagens conflitantes na fonte %s; "
+                        .formatted(glyph.sourceCodepoint(), glyph.font()));
             }
         }
 
