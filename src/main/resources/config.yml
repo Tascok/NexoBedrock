@@ -9,6 +9,19 @@
 
 enabled: true
 
+# Optional HTTPS endpoint for Geyser sync. Disabled until explicitly configured.
+# Store the token and keystore password in environment variables, not this file.
+proxy-sync:
+  enabled: false
+  bind-address: "127.0.0.1"
+  port: 8443
+  keystore-path: "plugins/NexoBedrock/sync-keystore.p12"
+  keystore-password-env: "NEXOBEDROCK_SYNC_KEYSTORE_PASSWORD"
+  token-env: "NEXOBEDROCK_SYNC_TOKEN"
+  # Optional secret files (relative to server root); when set they take priority.
+  keystore-password-file: ""
+  token-file: ""
+
 # Formatação dos nomes display_name nos mappings Geyser (texto do item Nexo).
 # O plugin não intercepta mensagens/chat de outros plugins.
 bedrock-text:

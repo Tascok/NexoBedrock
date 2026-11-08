@@ -1,5 +1,11 @@
 # Dev log — NexoBedrock
 
+## v0.1.32
+
+- Sincronização opcional de gerações completas entre Paper e extensões Geyser por HTTPS autenticado.
+- Download em área temporária com limite de tamanho, nomes fixos e verificação SHA-256, seguido de instalação na inicialização com backup e recuperação.
+- Sem reinício automático: novas gerações ficam pendentes até a reinicialização do Geyser, evitando desconectar jogadores inesperadamente.
+
 ## v0.1.31
 
 - Identificação automática dos fundos de GUI pelos nomes dos glyphs e caminhos das texturas declarados no Nexo, preservando ajustes existentes e listando correspondências ambíguas.

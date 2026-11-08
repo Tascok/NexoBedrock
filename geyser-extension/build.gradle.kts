@@ -9,6 +9,9 @@ val geyserApiVersion = "2.11.0"
 
 dependencies {
     compileOnly("org.geysermc.geyser:api:$geyserApiVersion-SNAPSHOT")
+    compileOnly("com.google.code.gson:gson:2.11.0")
+    testImplementation("com.google.code.gson:gson:2.11.0")
+    testImplementation(project(":"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

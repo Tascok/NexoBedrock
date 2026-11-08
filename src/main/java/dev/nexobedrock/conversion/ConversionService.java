@@ -345,6 +345,8 @@ public final class ConversionService {
             GeyserDeployer.DeployResult deployed = deployer.deploy(config,
                     built.mcpackPath(), mappings, Time.fileSafeNow());
 
+            publishSyncBundle(built.mcpackPath(), mappings);
+
             Map<String, String> outputs = new LinkedHashMap<>();
             outputs.put("pack", deployed.packPath().toString());
             outputs.put("mappings", deployed.mappingsPath().toString());
@@ -401,6 +403,7 @@ public final class ConversionService {
         byte[] mappings = Files.readAllBytes(cached.mappings());
         GeyserDeployer.DeployResult deployed = deployer.deploy(config, cached.mcpack(),
                 mappings, Time.fileSafeNow());
+        publishSyncBundle(cached.mcpack(), mappings);
 
         Map<String, String> outputs = new LinkedHashMap<>();
         outputs.put("pack", deployed.packPath().toString());
@@ -434,6 +437,12 @@ public final class ConversionService {
             return new PackSource(PackSourceKind.ASSETS_DIRECTORY, assets);
         }
         return null;
+    }
+
+    private void publishSyncBundle(Path pack, byte[] mappings) throws IOException {
+        if (!plugin.getConfig().getBoolean("proxy-sync.enabled", false)) return;
+        new dev.nexobedrock.sync.SyncBundleWriter().write(pack, mappings,
+                plugin.getDataFolder().toPath().resolve("sync/latest.zip"));
     }
 
     private Report report(PluginConfig config, ConversionRequest request, String source,

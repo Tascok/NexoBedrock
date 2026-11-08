@@ -51,6 +51,8 @@ Not supported (reported as `unsupported` rather than stopping the whole conversi
 
 See [the researched feature flows](docs/nexo-bedrock-feature-flows.md) for the
 asset and runtime requirements for furniture, entities, GUI glyphs, and tags.
+For optional authenticated synchronization to remote Geyser instances, see
+[proxy synchronization](docs/proxy-sync.md).
 
 ### Requirements
 

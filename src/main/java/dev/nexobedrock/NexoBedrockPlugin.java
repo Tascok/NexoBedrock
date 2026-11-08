@@ -19,11 +19,31 @@ public final class NexoBedrockPlugin extends JavaPlugin {
     private ConversionService conversionService;
     private FancyHologramBedrockBridge hologramBridge;
     private FurnitureProxyBridge furnitureProxyBridge;
+    private dev.nexobedrock.sync.SyncHttpsServer syncServer;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         reloadPluginConfig();
+
+        if (getConfig().getBoolean("proxy-sync.enabled", false)) {
+            char[] password = null;
+            try {
+                String token = syncSecret("token");
+                String secret = syncSecret("keystore-password");
+                if (secret == null || secret.isEmpty()) throw new IllegalArgumentException("keystore password environment variable is missing");
+                password = secret.toCharArray();
+                var bind = new java.net.InetSocketAddress(getConfig().getString("proxy-sync.bind-address", "127.0.0.1"),
+                        getConfig().getInt("proxy-sync.port", 8443));
+                var keys = dev.nexobedrock.util.PathUtil.resolve(this, getConfig().getString("proxy-sync.keystore-path", "plugins/NexoBedrock/sync-keystore.p12"));
+                syncServer = new dev.nexobedrock.sync.SyncHttpsServer(bind, keys, password, token,
+                        getDataFolder().toPath().resolve("sync/latest.zip"));
+                syncServer.start();
+                getLogger().info("Proxy sync HTTPS endpoint started.");
+            } catch (Exception exception) {
+                getLogger().severe("Proxy sync is disabled: " + exception.getClass().getSimpleName());
+            } finally { if (password != null) java.util.Arrays.fill(password, '\0'); }
+        }
 
         conversionService = new ConversionService(this, config::get,
                 getDescription().getVersion());
@@ -94,6 +114,7 @@ public final class NexoBedrockPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (syncServer != null) { syncServer.close(); syncServer = null; }
         if (furnitureProxyBridge != null) {
             furnitureProxyBridge.close();
             furnitureProxyBridge = null;
@@ -113,6 +134,14 @@ public final class NexoBedrockPlugin extends JavaPlugin {
         if (hologramBridge != null) {
             hologramBridge.setEnabled(getConfig().getBoolean("holograms.enabled", false));
         }
+    }
+
+    private String syncSecret(String name) throws java.io.IOException {
+        String file = getConfig().getString("proxy-sync." + name + "-file", "");
+        if (file != null && !file.isBlank())
+            return java.nio.file.Files.readString(dev.nexobedrock.util.PathUtil.resolve(this, file)).strip();
+        String fallback = "token".equals(name) ? "NEXOBEDROCK_SYNC_TOKEN" : "NEXOBEDROCK_SYNC_KEYSTORE_PASSWORD";
+        return System.getenv(getConfig().getString("proxy-sync." + name + "-env", fallback));
     }
 
     public PluginConfig getPluginConfig() {

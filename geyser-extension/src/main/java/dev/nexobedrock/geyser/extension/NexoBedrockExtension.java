@@ -5,6 +5,7 @@ import org.geysermc.geyser.api.entity.custom.CustomEntityDefinition;
 import org.geysermc.geyser.api.event.java.ServerSpawnEntityEvent;
 import org.geysermc.geyser.api.event.lifecycle.GeyserDefineEntitiesEvent;
 import org.geysermc.geyser.api.event.lifecycle.GeyserPreInitializeEvent;
+import org.geysermc.geyser.api.event.lifecycle.GeyserShutdownEvent;
 import org.geysermc.geyser.api.util.Identifier;
 
 import java.io.IOException;
@@ -20,9 +21,33 @@ public final class NexoBedrockExtension implements org.geysermc.geyser.api.exten
     private final Map<Integer, String> furnitureMappings = new LinkedHashMap<>();
     private final Map<Integer, CustomEntityDefinition> furnitureDefinitions = new LinkedHashMap<>();
     private Map<String, String> mappings = Map.of();
+    private SyncPuller syncPuller;
 
     @Subscribe
     public void onPreInitialize(GeyserPreInitializeEvent event) {
+        try {
+            Files.createDirectories(dataFolder());
+            new SyncInstaller(geyserApi().configDirectory(), dataFolder()).recover();
+            Path syncConfig = dataFolder().resolve("sync.properties");
+            if (Files.notExists(syncConfig)) {
+                Files.writeString(syncConfig, "# HTTPS only; token must be supplied via the named environment variable.\n"
+                        + "enabled=false\nurl=https://example.invalid:8443/v1/bundle\n"
+                        + "token-env=NEXOBEDROCK_SYNC_TOKEN\ntoken-file=\nca-certificate=\ninterval-seconds=60\n");
+            }
+            java.util.Properties properties = new java.util.Properties();
+            try (InputStream input = Files.newInputStream(syncConfig)) { properties.load(input); }
+            if (Boolean.parseBoolean(properties.getProperty("enabled", "false"))) {
+                syncPuller = new SyncPuller(dataFolder(), properties, message -> logger().info(message));
+                try { syncPuller.fetch(); }
+                catch (InterruptedException exception) { Thread.currentThread().interrupt(); }
+                catch (IOException exception) { logger().warning("Proxy sync unavailable at startup; using last verified bundle."); }
+                syncPuller.applyAtStartup(geyserApi().configDirectory());
+                syncPuller.start();
+            }
+        } catch (Exception exception) {
+            logger().error("Proxy sync initialization failed; check configuration and recovery before allowing players.");
+            throw new IllegalStateException("Proxy sync initialization failed");
+        }
         Path config = dataFolder().resolve("entity-mappings.properties");
         try {
             Files.createDirectories(config.getParent());
@@ -64,6 +89,11 @@ public final class NexoBedrockExtension implements org.geysermc.geyser.api.exten
             mappings = Map.of();
             logger().error("Could not load entity mappings; replacements are disabled.", exception);
         }
+    }
+
+    @Subscribe
+    public void onShutdown(GeyserShutdownEvent event) {
+        if (syncPuller != null) { syncPuller.close(); syncPuller = null; }
     }
 
     @Subscribe
