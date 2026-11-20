@@ -6,8 +6,8 @@ Atualizado em 2026-11-20.
 
 - Branch de trabalho: `main`; destino autorizado: `origin/main`.
 - Versão do plugin e da extensão: `0.1.33`.
-- Último commit no início desta revisão: `0470f0a Aguarda conversão ao iniciar sincronização Geyser`.
-- Tag mais recente: `v0.1.33`.
+- Último commit no início desta revisão: `720e65e Adiciona Memory Bank para agentes de IA`.
+- Último commit de código: `0470f0a Aguarda conversão ao iniciar sincronização Geyser`; tag mais recente: `v0.1.33`.
 - Módulos Gradle: plugin Paper na raiz e `geyser-extension`.
 - Java 21; Paper API `1.21.10-R0.1-SNAPSHOT`; Nexo `1.29.1`; Geyser API `2.11.0-SNAPSHOT`.
 - Floodgate é opcional e não tem versão fixada no build; o backend identifica Bedrock pelo prefixo de nome.
@@ -54,7 +54,6 @@ Atualizado em 2026-11-20.
 - `composite`/`select` Java e modelos de entidades customizadas/elytra/capes não têm suporte completo.
 - A sync não reinicia Geyser automaticamente; os jogadores precisam reconectar para obter o novo pack.
 - O certificado TLS de produção ainda precisa ser válido para o hostname público; certificado autoassinado exige CA configurada na extensão.
-- O visual final dos aliases dos ícones do menu de conquistas, ajustados fora do repositório, ainda aguarda confirmação do usuário.
 
 ## Erros conhecidos
 
@@ -74,16 +73,17 @@ Atualizado em 2026-11-20.
 
 - Comandos canônicos: `gradle test build`, `git diff --check`.
 - `gradle clean test build`: **BUILD SUCCESSFUL** em 2026-11-20; 69 testes, 64 aprovados e 5 smoke tests opt-in ignorados por ausência dos assets/packs externos opcionais.
-- A configuração Memory Bank não altera arquivos `.java`; confirmar com `git diff --name-only -- '*.java'` e `git status --short -- '*.java'`.
+- `gradle test build`: **BUILD SUCCESSFUL** em 2026-11-20 para esta revisão documental; 10 tarefas executadas/atualizadas sem falhas.
+- Confirmação visual do usuário em 2026-11-20: os ícones do menu de conquistas estão resolvidos no cliente Bedrock; a captura operacional local permaneceu não rastreada.
+- A atualização deste registro não altera arquivos `.java`; confirmar com `git diff --name-only -- '*.java'` e `git status --short -- '*.java'`.
 
 ## Próximos passos lógicos
 
-1. Confirmar visualmente os ícones do menu de conquistas no cliente Bedrock e registrar o resultado.
-2. Emitir/usar certificado TLS válido para qualquer exposição pública da sincronização.
-3. Completar e testar a sincronização viva de furniture (transformações, estado e interação).
-4. Implementar tracking live de ModelEngine e reprodução de clips por instância.
-5. Expandir overlays de GUI para containers Bedrock compatíveis e provider de fontes ausente.
-6. Manter testes de integração para publicação atômica, startup remoto e compatibilidade de versões.
+1. Emitir/usar certificado TLS válido para qualquer exposição pública da sincronização.
+2. Completar e testar a sincronização viva de furniture (transformações, estado e interação).
+3. Implementar tracking live de ModelEngine e reprodução de clips por instância.
+4. Expandir overlays de GUI para containers Bedrock compatíveis e provider de fontes ausente.
+5. Manter testes de integração para publicação atômica, startup remoto e compatibilidade de versões.
 
 ## Regra de atualização
 
