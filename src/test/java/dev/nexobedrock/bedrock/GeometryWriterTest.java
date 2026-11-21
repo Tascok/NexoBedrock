@@ -65,6 +65,10 @@ class GeometryWriterTest {
         assertEquals(16, description.get("texture_width").getAsInt());
 
         JsonArray bones = entry.getAsJsonArray("bones");
+        assertArray(bone(bones, "root").getAsJsonArray("pivot"), 0f, 0f, 0f);
+        assertArray(bone(bones, "root_x").getAsJsonArray("pivot"), 0f, 0f, 0f);
+        assertArray(bone(bones, "root_y").getAsJsonArray("pivot"), 0f, 0f, 0f);
+        assertArray(bone(bones, "root_z").getAsJsonArray("pivot"), 0f, 0f, 0f);
         JsonObject rootZ = bone(bones, "root_z");
         assertNotNull(rootZ);
         JsonArray rootCubes = rootZ.getAsJsonArray("cubes");

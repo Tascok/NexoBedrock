@@ -1,6 +1,6 @@
 # Arquitetura — NexoBedrock
 
-Snapshot do código em `main`, versão `0.1.34`.
+Snapshot do código em `main`, versão `0.1.35`.
 
 ## Visão geral
 

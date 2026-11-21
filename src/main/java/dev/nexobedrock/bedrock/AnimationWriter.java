@@ -17,6 +17,7 @@ public final class AnimationWriter {
     // usam +8 Y para preservar o alinhamento apos o recentralizamento.
     private static final float FIRST_PERSON_ROOT_Y = 18f;
     private static final float THIRD_PERSON_ROOT_Y = 21f;
+    private static final float HEAD_ROOT_Y = 27.9f;
 
     public JsonObject write(String animationPrefix, JsonObject display) {
         JsonObject animations = new JsonObject();
@@ -112,7 +113,7 @@ public final class AnimationWriter {
         addRotationZ(bones, transform);
 
         JsonObject root = new JsonObject();
-        root.add("position", array(0f, 19.9f, 0f));
+        root.add("position", array(0f, HEAD_ROOT_Y, 0f));
         bones.add("root", root);
 
         animation.add("bones", bones);

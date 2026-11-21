@@ -73,23 +73,35 @@ class AnimationWriterTest {
         assertArray(head.getAsJsonObject("root_x").getAsJsonArray("scale"),
                 0.625f, 0.625f, 0.625f);
         assertArray(head.getAsJsonObject("root").getAsJsonArray("position"),
-                0f, 19.9f, 0f);
+                0f, 27.9f, 0f);
     }
 
     @Test
-    void usesCalibratedVerticalOffsetsForEachPerspective() {
+    void usesCalibratedVerticalOffsetsForEverySlotAndPerspective() {
         JsonObject animations = new AnimationWriter().write("animation.test", null)
                 .getAsJsonObject("animations");
 
-        JsonObject thirdPerson = bones(animations,
+        JsonObject thirdPersonMain = bones(animations,
                 "animation.test.thirdperson_main_hand");
-        assertArray(thirdPerson.getAsJsonObject("root").getAsJsonArray("position"),
+        assertArray(thirdPersonMain.getAsJsonObject("root").getAsJsonArray("position"),
+                0f, 21f, -3f);
+        JsonObject thirdPersonOff = bones(animations,
+                "animation.test.thirdperson_off_hand");
+        assertArray(thirdPersonOff.getAsJsonObject("root").getAsJsonArray("position"),
                 0f, 21f, -3f);
 
-        JsonObject firstPerson = bones(animations,
+        JsonObject firstPersonMain = bones(animations,
                 "animation.test.firstperson_main_hand");
-        assertArray(firstPerson.getAsJsonObject("root").getAsJsonArray("position"),
+        assertArray(firstPersonMain.getAsJsonObject("root").getAsJsonArray("position"),
                 4f, 18f, 4f);
+        JsonObject firstPersonOff = bones(animations,
+                "animation.test.firstperson_off_hand");
+        assertArray(firstPersonOff.getAsJsonObject("root").getAsJsonArray("position"),
+                4f, 18f, 4f);
+
+        JsonObject head = bones(animations, "animation.test.head");
+        assertArray(head.getAsJsonObject("root").getAsJsonArray("position"),
+                0f, 27.9f, 0f);
     }
 
     @Test

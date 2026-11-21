@@ -1,5 +1,10 @@
 # Dev log — NexoBedrock
 
+## v0.1.35
+
+- Completa a compensação vertical de 8 unidades no slot de cabeça, mantendo o alinhamento dos modelos 3D após o recentralizamento da geometria.
+- Amplia a regressão para as duas mãos em primeira e terceira pessoa, para a cabeça e para os pivôs da hierarquia base.
+
 ## v0.1.34
 
 - Correção da altura dos modelos 3D na mão, com offsets verticais distintos para primeira e terceira pessoa.
