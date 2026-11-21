@@ -1,5 +1,10 @@
 # Dev log — NexoBedrock
 
+## v0.1.34
+
+- Correção da altura dos modelos 3D na mão, com offsets verticais distintos para primeira e terceira pessoa.
+- Compensação de 8 unidades Y após o recentralizamento da geometria, preservando as posições calibradas para o rig original.
+
 ## v0.1.33
 
 - A extensão aguarda temporariamente o endpoint do Paper na inicialização, evitando carregar um pack antigo quando o proxy inicia primeiro. O tempo é configurável e, caso o Paper continue inacessível, usa-se a última geração validada.

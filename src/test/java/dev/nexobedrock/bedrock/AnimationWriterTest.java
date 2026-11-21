@@ -77,6 +77,22 @@ class AnimationWriterTest {
     }
 
     @Test
+    void usesCalibratedVerticalOffsetsForEachPerspective() {
+        JsonObject animations = new AnimationWriter().write("animation.test", null)
+                .getAsJsonObject("animations");
+
+        JsonObject thirdPerson = bones(animations,
+                "animation.test.thirdperson_main_hand");
+        assertArray(thirdPerson.getAsJsonObject("root").getAsJsonArray("position"),
+                0f, 21f, -3f);
+
+        JsonObject firstPerson = bones(animations,
+                "animation.test.firstperson_main_hand");
+        assertArray(firstPerson.getAsJsonObject("root").getAsJsonArray("position"),
+                4f, 18f, 4f);
+    }
+
+    @Test
     void usesFallbackFirstPersonRotationWhenSlotHasNoRotation() {
         JsonObject display = Json.parseObject("""
                 {"firstperson_righthand": {"translation": [1, 2, 3]}}

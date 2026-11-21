@@ -12,6 +12,12 @@ import com.google.gson.JsonObject;
 public final class AnimationWriter {
     private static final float HEAD_SCALE = 0.625f;
 
+    // GeometryWriter recentraliza a geometria Java em Y=0. Os offsets-base
+    // foram calibrados para o pivot Y=8 do Java2Bedrock; por isso as posicoes
+    // usam +8 Y para preservar o alinhamento apos o recentralizamento.
+    private static final float FIRST_PERSON_ROOT_Y = 18f;
+    private static final float THIRD_PERSON_ROOT_Y = 21f;
+
     public JsonObject write(String animationPrefix, JsonObject display) {
         JsonObject animations = new JsonObject();
 
@@ -50,7 +56,7 @@ public final class AnimationWriter {
 
         JsonObject root = new JsonObject();
         root.add("rotation", array(90f, 0f, 0f));
-        root.add("position", array(0f, 13f, -3f));
+        root.add("position", array(0f, THIRD_PERSON_ROOT_Y, -3f));
         bones.add("root", root);
 
         animation.add("bones", bones);
@@ -63,7 +69,7 @@ public final class AnimationWriter {
 
         JsonObject root = new JsonObject();
         root.add("rotation", array(90f, 60f, -40f));
-        root.add("position", array(4f, 10f, 4f));
+        root.add("position", array(4f, FIRST_PERSON_ROOT_Y, 4f));
         root.add("scale", array(1.5f, 1.5f, 1.5f));
         bones.add("root", root);
 

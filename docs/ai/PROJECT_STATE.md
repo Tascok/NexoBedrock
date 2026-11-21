@@ -1,13 +1,12 @@
 # Estado do projeto — NexoBedrock
 
-Atualizado em 2026-11-20.
+Atualizado em 2026-11-21.
 
 ## Identificação
 
 - Branch de trabalho: `main`; destino autorizado: `origin/main`.
-- Versão do plugin e da extensão: `0.1.33`.
-- Último commit no início desta revisão: `720e65e Adiciona Memory Bank para agentes de IA`.
-- Último commit de código: `0470f0a Aguarda conversão ao iniciar sincronização Geyser`; tag mais recente: `v0.1.33`.
+- Versão do plugin e da extensão: `0.1.34`.
+- Último commit no início desta revisão: `0007658 Registra validação dos ícones de conquistas`; tag mais recente antes da revisão: `v0.1.33`.
 - Módulos Gradle: plugin Paper na raiz e `geyser-extension`.
 - Java 21; Paper API `1.21.10-R0.1-SNAPSHOT`; Nexo `1.29.1`; Geyser API `2.11.0-SNAPSHOT`.
 - Floodgate é opcional e não tem versão fixada no build; o backend identifica Bedrock pelo prefixo de nome.
@@ -25,6 +24,14 @@ Atualizado em 2026-11-20.
 - Cache por pack/config/armadura/aparência/ModelEngine/versão e relatório por item.
 - Publicação com arquivos temporários, rollback, backups e preservação dos arquivos antigos em falhas.
 - Cópia opcional em `plugins/NexoBedrock/output/` e relatórios em `plugins/NexoBedrock/reports/`.
+
+### Modelos 3D em mão
+
+- A animação da raiz usa offsets distintos: terceira pessoa `[0, 21, -3]` e primeira pessoa `[4, 18, 4]`.
+- A geometria Java foi recentralizada em `[0, -8, 0]` no commit `ab5ca8f`; a equação `posição_nova = posição_base + [0, 8, 0]` preserva a posição calibrada para o rig com pivot `Y=8` do Java2Bedrock.
+- Fontes: [Java2Bedrock](https://github.com/AZPixel-Team/Java2Bedrock/blob/ffe3f128db5ef251b267bd5ae7f9ff7f4315fd3e/converter.sh), [Rainbow](https://github.com/GeyserMC/Rainbow/blob/c98595574187ebc115fe7c71d467700a936f8ac5/rainbow/src/main/java/org/geysermc/rainbow/mapping/animation/AnimationMapper.java), [Bedrock Wiki](https://wiki.bedrock.dev/items/attachables), [Microsoft Learn](https://learn.microsoft.com/en-us/minecraft/creator/documents/attachables) e o preview de binding do [Blockbench](https://github.com/JannisX11/blockbench/blob/ec0b2827104d0799c153bfb5f867579c0c44652f/js/outliner/types/group.js).
+- O deslocamento de binding `-24 Y` do Blockbench é anterior e posterior a `ab5ca8f`, portanto se cancela na compensação; não é um offset adicional do attachable.
+- Rotações, escala e transformações por slot permanecem inalteradas; não há override individual por item/textura.
 
 ### GUI, glyphs e texto
 
@@ -52,6 +59,7 @@ Atualizado em 2026-11-20.
 - O overlay de GUI cobre apenas baús clássicos; outros containers, Pocket, HUD e override global de tela não são suportados.
 - Providers `space`/`reference`, métricas Java exatas, sons, texturas Bedrock animadas, blocos customizados e blockstates não são convertidos.
 - `composite`/`select` Java e modelos de entidades customizadas/elytra/capes não têm suporte completo.
+- Os offsets absolutos das mãos são empíricos e preservam o rig de referência; a confirmação final depende do cliente Bedrock e de modelos 3D específicos.
 - A sync não reinicia Geyser automaticamente; os jogadores precisam reconectar para obter o novo pack.
 - O certificado TLS de produção ainda precisa ser válido para o hostname público; certificado autoassinado exige CA configurada na extensão.
 
@@ -72,10 +80,10 @@ Atualizado em 2026-11-20.
 ## Validação
 
 - Comandos canônicos: `gradle test build`, `git diff --check`.
-- `gradle clean test build`: **BUILD SUCCESSFUL** em 2026-11-20; 69 testes, 64 aprovados e 5 smoke tests opt-in ignorados por ausência dos assets/packs externos opcionais.
-- `gradle test build`: **BUILD SUCCESSFUL** em 2026-11-20 para esta revisão documental; 10 tarefas executadas/atualizadas sem falhas.
+- `gradle :test --tests dev.nexobedrock.bedrock.AnimationWriterTest`: **BUILD SUCCESSFUL** em 2026-11-21; o novo teste de regressão validou os offsets `[0, 21, -3]` e `[4, 18, 4]`.
+- `gradle test build`: **BUILD SUCCESSFUL** em 2026-11-21; 70 testes, 65 aprovados e 5 smoke tests opt-in ignorados por ausência dos assets/packs externos opcionais.
+- `git diff --check`: sem erros em 2026-11-21.
 - Confirmação visual do usuário em 2026-11-20: os ícones do menu de conquistas estão resolvidos no cliente Bedrock; a captura operacional local permaneceu não rastreada.
-- A atualização deste registro não altera arquivos `.java`; confirmar com `git diff --name-only -- '*.java'` e `git status --short -- '*.java'`.
 
 ## Próximos passos lógicos
 
