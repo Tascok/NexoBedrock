@@ -6,7 +6,7 @@ Atualizado em 2026-11-21.
 
 - Branch de trabalho: `main`; destino autorizado: `origin/main`.
 - Versão do plugin e da extensão: `0.1.35`.
-- Último commit no início desta revisão: `d7d92b4 Corrige altura dos modelos 3D na mão`; tag mais recente antes da revisão: `v0.1.33`.
+- Commits da correção: `d7d92b4 Corrige altura dos modelos 3D na mão` e `b830fba Completa compensação vertical dos modelos 3D`; tag mais recente antes da revisão: `v0.1.33`.
 - Módulos Gradle: plugin Paper na raiz e `geyser-extension`.
 - Java 21; Paper API `1.21.10-R0.1-SNAPSHOT`; Nexo `1.29.1`; Geyser API `2.11.0-SNAPSHOT`.
 - Floodgate é opcional e não tem versão fixada no build; o backend identifica Bedrock pelo prefixo de nome.
@@ -84,14 +84,15 @@ Atualizado em 2026-11-21.
 - `gradle :test --tests dev.nexobedrock.bedrock.GeometryWriterTest`: **BUILD SUCCESSFUL** em 2026-11-21; os pivôs `[0, 0, 0]` da hierarquia base foram verificados.
 - `gradle test build`: **BUILD SUCCESSFUL** em 2026-11-21; 70 testes, 65 aprovados e 5 smoke tests opt-in ignorados por ausência dos assets/packs externos opcionais.
 - `git diff --check`: sem erros em 2026-11-21.
-- `d7d92b4` foi publicado em `origin/main` em 2026-11-21.
-- JAR validado `NexoBedrock-0.1.34.jar` (SHA-256 `8eaa82a410df303d54d262a9ea68e9820b21dc151aa848665449bafe785b8d29`) implantado no Paper; o JAR `0.1.33` foi preservado como `plugins/NexoBedrock-0.1.33.jar.backup-before-0.1.34` (SHA-256 `b06330cb6f9a42fa8f891c852d4155a44e3480dbbd4b5b85b48d6c305a4614ff`).
-- Logs do Paper confirmaram `Loading server plugin NexoBedrock v0.1.34`, `Enabling NexoBedrock v0.1.34` e conversão sem cache de 156 itens (37 2D, 119 3D).
-- O pack da v0.1.34 continha os offsets `[0, 21, -3]` e `[4, 18, 4]` nas 119 animações de terceira e primeira pessoa; manifest `generated_with=0.1.34`; SHA-256 do pack `d21ef9de912462239302b1a815e38fd7302254eb48ee6552270be166730539e2`.
-- O deploy local preservou pack/mappings anteriores em `plugins/NexoBedrock/backups/20261121-203552`; o proxy Geyser preservou os arquivos anteriores em `plugins/Geyser-Velocity/extensions/nexobedrock/sync-backup-88927be6-a58f-45ca-8126-a9cb3269aa5b`.
-- O bundle sincronizado (`b8a3ee825cec47a70b482eb9be8bc920b46a0a17fd0670d067cd566ee126675c`) foi validado e instalado no Velocity/Geyser antes da inicialização; o pack remoto possui o mesmo SHA-256 da geração local e o Geyser concluiu com `Done (11.845s)!`.
+- `d7d92b4` e `b830fba` foram publicados em `origin/main` em 2026-11-21; `b830fba` completa a compensação do slot de cabeça e amplia a regressão.
+- JAR validado `NexoBedrock-0.1.35.jar` (SHA-256 `a2a66eb8775d48645a0cfcddad798a63a545c49eb7eb3d34e678d8413a14b63b`) implantado no Paper; o JAR `0.1.34` foi preservado como `plugins/NexoBedrock-0.1.34.jar.backup-before-0.1.35` (SHA-256 `8eaa82a410df303d54d262a9ea68e9820b21dc151aa848665449bafe785b8d29`).
+- Logs do Paper confirmaram `Loading server plugin NexoBedrock v0.1.35`, `Enabling NexoBedrock v0.1.35` e conversão de 156 itens (37 2D, 119 3D); o startup seguinte reutilizou o cache da v0.1.35.
+- O pack da v0.1.35 contém os offsets `[0, 21, -3]`, `[4, 18, 4]` e `[0, 27.9, 0]` nas 119 animações de cada contexto: terceira pessoa (mão principal e secundária), primeira pessoa (mão principal e secundária) e cabeça; manifest `generated_with=0.1.35`; SHA-256 `3607c16860697a90f215858371ba7cd8d3e9ec30895c1f7fd3f24a810da0a16b`.
+- O deploy local preservou pack/mappings anteriores em `plugins/NexoBedrock/backups/20261121-211104`; o proxy preservou os arquivos anteriores em `plugins/Geyser-Velocity/extensions/nexobedrock/sync-backup-fabbc067-f77c-4509-9694-acf5a1d8eb32`.
+- O bundle sincronizado (`e2a13af63de3b02704d5b9dd2d2554072332545997ee6fc24d65eeab6b475553`) foi validado e instalado no Velocity/Geyser; o pack remoto possui o mesmo SHA-256 da geração local.
+- Extensão Geyser `0.1.35` implantada (SHA-256 `df0052dd9b15ffad2366b3151d8b7b6bad74907611267b521defba8d5f54e933`); a `0.1.33` foi preservada em `plugins/Geyser-Velocity/extensions/nexobedrock/backups/before-0.1.35/extension.jar`; o Geyser carregou a extensão e concluiu com `Done (15.541s)!`.
 - Confirmação visual do usuário em 2026-11-20: os ícones do menu de conquistas estão resolvidos no cliente Bedrock; a captura operacional local permaneceu não rastreada.
-- A validação visual específica dos offsets de mão ainda requer um cliente Bedrock reconectado ao pack novo.
+- A validação visual específica dos offsets das mãos e da cabeça ainda requer um cliente Bedrock reconectado ao pack novo.
 
 ## Próximos passos lógicos
 
